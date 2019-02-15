@@ -1,10 +1,10 @@
-# Change History For NgxDraggableDomLibrary
+# Change History For ngx-draggable-dom
 
 <a name="1.0.0-rc1"></a>
 ## 1.0.0-rc1 (2019-02-14)
 
 #### Overview
-+ This is the initial release candidate of the NgxDraggableDomLibrary. This library has been developed using the Ng7 CLI tools for generating libraries and upgrades the old ng2-draggable-dom codebase to be based on the latest Ng7 dependencies.
++ This is the initial release candidate of the ngx-draggable-dom. This library has been developed using the Ng7 CLI tools for generating libraries and upgrades the old ng2-draggable-dom codebase to be based on the latest Ng7 dependencies.
 
 # Change History for ng2-draggable-dom
 

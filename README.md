@@ -1,4 +1,4 @@
-# NgxDraggableDomLibrary [![npm version](https://badge.fury.io/js/ngx-draggable-dom.svg)](http://badge.fury.io/js/ngx-draggable-dom) [![npm downloads](https://img.shields.io/npm/dm/ngx-draggable-dom.svg)](https://npmjs.org/ngx-draggable-dom)
+# ngx-draggable-dom [![npm version](https://badge.fury.io/js/ngx-draggable-dom.svg)](http://badge.fury.io/js/ngx-draggable-dom) [![npm downloads](https://img.shields.io/npm/dm/ngx-draggable-dom.svg)](https://npmjs.org/ngx-draggable-dom)
 
 Angular attribute directive that causes any element to become a draggable element.
 
@@ -13,7 +13,7 @@ Angular attribute directive that causes any element to become a draggable elemen
 This package provides a directive for Angular 7+ that makes any DOM element draggable. This project began as a fork of the [angular2-draggable](https://github.com/xieziyu/angular2-draggable) directive by [xieziyu](https://github.com/xieziyu) and was created to provide a more robust set of features and to keep package releases on the bleeding edge. The initial fork was known as ng2-draggable-dom and was deprecated in favor of this package that runs using the latest Angular dependencies and tools for libraries.
 
 ## Latest News
-Always check the [CHANGELOG](https://github.com/bmartinson/NgxDraggableDomLibrary/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
+Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
 ### 2019.02.14:
 + Updated the project to use the latest Angular 7 tools.
