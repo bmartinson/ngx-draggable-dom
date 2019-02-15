@@ -10,7 +10,7 @@
     "e2e": "ng e2e"
   },
   "private": false,
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "author": "Brian Martinson <brian@brianmartinson.com> (https://brianmartinson.com/)",
   "keywords": [
     "angular",
