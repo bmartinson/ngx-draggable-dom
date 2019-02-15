@@ -301,6 +301,10 @@ export class NgxDraggableDomDirective implements OnInit {
                 position: this.curTrans,
             } as IMoveEvent);
             this.moving = true;
+
+            // add the ng-dragging class to the element we're interacting with
+            const element = this.handle ? this.handle : this.el.nativeElement;
+            this.renderer.addClass(element, "ng-dragging");
         }
 
         if (!this.naturalPosition) {
@@ -353,6 +357,10 @@ export class NgxDraggableDomDirective implements OnInit {
             }
 
             this.moving = false;
+
+            // remove the ng-dragging class to the element we're interacting with
+            const element = this.handle ? this.handle : this.el.nativeElement;
+            this.renderer.removeClass(element, "ng-dragging");
 
             // if we're constrained just use the tempTrans value set by moveTo, else add to our last trans
             if (this.constrainedX) {
