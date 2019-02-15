@@ -1,5 +1,11 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.0.0"></a>
+## [1.0.0](https://github.com/bmartinson/ngx-draggable-dom/compare/0.0.1...bmartinson:1.0.0) (2019-02-14)
+
+#### Overview
++ This is the first official release of the ngx-draggable-dom directive built with the latest Ng7 dependencies using the Angular CLI.
+
 <a name="0.0.1"></a>
 ## 0.0.1 (2019-02-14)
 
