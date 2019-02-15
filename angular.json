@@ -134,6 +134,41 @@
           }
         }
       }
+    },
+    "ngx-draggable-dom": {
+      "root": "projects/ngx-draggable-dom",
+      "sourceRoot": "projects/ngx-draggable-dom/src",
+      "projectType": "library",
+      "prefix": "ngxDraggableDom",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.json",
+            "project": "projects/ngx-draggable-dom/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/ngx-draggable-dom/src/test.ts",
+            "tsConfig": "projects/ngx-draggable-dom/tsconfig.spec.json",
+            "karmaConfig": "projects/ngx-draggable-dom/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/ngx-draggable-dom/tsconfig.lib.json",
+              "projects/ngx-draggable-dom/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "NgxDraggableDomLibrary"
