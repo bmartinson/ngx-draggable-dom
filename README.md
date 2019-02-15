@@ -15,6 +15,9 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2019.02.15:
++ Added the automatic addition and removal of the `ng-dragging` class while the user is interacting with the element.
+
 ### 2019.02.14:
 + Updated the project to use the latest Angular 7 tools.
 
@@ -89,11 +92,15 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 + Call this function on a reference to the directive in TypeScript code to request that the directive be reset to a default state. This is useful for when the draggable element has its location programmatically adjusted such that subsequent drags should not remember past translations that may affect future placement.
 
 ####  CSS
-When `ngxDraggableDom` is enabled on some element, the `ng-draggable` class is automatically assigned to it. You can use it to customize it. For example, change the cursor style for draggable elements in your page by doing the following:
+When `ngxDraggableDom` is enabled on some element, the `ng-draggable` class is automatically assigned to it. When the user is actively dragging the element, the class `ng-dragging` is applied to the element (or the specified handle). You can use these to customize the look and feel for when you are interacting with the element. For example, change the cursor style for draggable elements in your page by doing the following:
 
 ```css
 .ng-draggable {
   cursor: move;
+}
+
+.ng-dragging {
+  cursor: grabbing !important;
 }
 ```
 

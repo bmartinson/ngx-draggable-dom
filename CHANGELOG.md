@@ -1,5 +1,14 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.0.1"></a>
+## [1.0.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.0...bmartinson:1.0.1) (2019-02-15)
+
+#### Overview
++ This update makes it so the class `ng-dragging` is added to the element that the user is interacting with (the directed element or the set handle) as they are moving and removed when they stop. This was you can more easily style movement classes.
+
+#### Enhancements
++ When you interact with an element that is using the directive, the `ng-dragging` class is added to the element. It is then removed when the user stops dragging the element. You may use this class style name along with the already existing `ng-draggable` to style your elements interactivity how you want.
+
 <a name="1.0.0"></a>
 ## [1.0.0](https://github.com/bmartinson/ngx-draggable-dom/compare/0.0.1...bmartinson:1.0.0) (2019-02-14)
 
