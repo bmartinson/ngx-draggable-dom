@@ -44,28 +44,6 @@ export class NgxDraggableDomDirective implements OnInit {
     private oldPosition: string;
     private curTrans: IPosition;
 
-    constructor(@Inject(ElementRef) private el: ElementRef, @Inject(Renderer2) private renderer: Renderer2) {
-        this.started = new EventEmitter<IMoveEvent>();
-        this.stopped = new EventEmitter<IMoveEvent>();
-        this.moved = new EventEmitter<IMoveEvent>();
-        this.edge = new EventEmitter<IBounds>();
-
-        this.constrainByBounds = false;
-        this.allowDrag = true;
-        this.moving = false;
-        this.constrainedX = false;
-        this.constrainedY = false;
-        this.clientMoving = {x: 0, y: 0} as IPosition;
-        this.oldClientPosition = null;
-        this.original = null;
-        this.naturalPosition = null;
-        this.oldTrans = {x: 0, y: 0} as IPosition;
-        this.tempTrans = {x: 0, y: 0} as IPosition;
-        this.oldZIndex = "";
-        this.oldPosition = "";
-        this.curTrans = {x: 0, y: 0} as IPosition;
-    }
-
     @Input("ngxDraggableDom")
     public set ngxDraggableDom(setting: boolean) {
         // if no value is provided for the attribute directive name, then turn it on
@@ -89,6 +67,31 @@ export class NgxDraggableDomDirective implements OnInit {
         return !!this.allowDrag;
     }
 
+    constructor(@Inject(ElementRef) private el: ElementRef, @Inject(Renderer2) private renderer: Renderer2) {
+        this.started = new EventEmitter<IMoveEvent>();
+        this.stopped = new EventEmitter<IMoveEvent>();
+        this.moved = new EventEmitter<IMoveEvent>();
+        this.edge = new EventEmitter<IBounds>();
+
+        this.constrainByBounds = false;
+        this.allowDrag = true;
+        this.moving = false;
+        this.constrainedX = false;
+        this.constrainedY = false;
+        this.clientMoving = {x: 0, y: 0} as IPosition;
+        this.oldClientPosition = null;
+        this.original = null;
+        this.naturalPosition = null;
+        this.oldTrans = {x: 0, y: 0} as IPosition;
+        this.tempTrans = {x: 0, y: 0} as IPosition;
+        this.oldZIndex = "";
+        this.oldPosition = "";
+        this.curTrans = {x: 0, y: 0} as IPosition;
+    }
+
+    /**
+     * Angular lifecycle hook for initialization that ensures that the draggable class is applied to the element.
+     */
     public ngOnInit(): void {
         if (this.allowDrag) {
             const element: any = this.handle ? this.handle : this.el.nativeElement;
@@ -96,7 +99,6 @@ export class NgxDraggableDomDirective implements OnInit {
         }
     }
 
-    // Support Mouse Events:
     @HostListener("mousedown", ["$event"])
     private onMouseDown(event: any): void {
         // 1. skip right click;
