@@ -1,5 +1,11 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.0.2"></a>
+## [1.0.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.1...bmartinson:1.0.2) (2019-05-02)
+
+#### Overview
++ This update uses the latest node packages to resolve vulnerability issues with dev dependencies.
+
 <a name="1.0.1"></a>
 ## [1.0.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.0...bmartinson:1.0.1) (2019-02-15)
 
