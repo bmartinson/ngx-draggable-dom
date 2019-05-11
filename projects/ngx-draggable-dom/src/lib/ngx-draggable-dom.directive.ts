@@ -102,6 +102,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
     @HostListener("mousedown", ["$event"])
     private onMouseDown(event: any): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         // 1. skip right click;
         // 2. if handle is set, the element can only be moved by handle
         if (event.button === 2 || (this.handle !== undefined && event.target !== this.handle)) {
@@ -112,18 +115,24 @@ export class NgxDraggableDomDirective implements OnInit {
         this.pickUp();
     }
 
-    @HostListener("document:mouseup")
-    private onMouseUp(): void {
+    @HostListener("document:mouseup", ["$event"])
+    private onMouseUp(event: Event): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         this.putBack();
     }
 
-    @HostListener("document:mouseleave")
-    private onMouseLeave(): void {
+    @HostListener("document:mouseleave", ["$event"])
+    private onMouseLeave(event: Event): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         this.putBack();
     }
 
     @HostListener("document:mousemove", ["$event"])
-    private onMouseMove(event: any): void {
+    private onMouseMove(event: MouseEvent): void {
         if (this.moving && this.allowDrag) {
             // determine the distance this mouse move event is going in each direction
             if (this.oldClientPosition) {
@@ -141,13 +150,19 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // Support Touch Events:
-    @HostListener("document:touchend")
-    private onTouchEnd(): void {
+    @HostListener("document:touchend", ["$event"])
+    private onTouchEnd(event: TouchEvent | any): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         this.putBack();
     }
 
     @HostListener("touchstart", ["$event"])
     private onTouchStart(event: TouchEvent | any): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         if (this.handle !== undefined && event.target !== this.handle) {
             return;
         }
@@ -158,6 +173,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
     @HostListener("document:touchmove", ["$event"])
     private onTouchMove(event: TouchEvent | any): void {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         if (this.moving && this.allowDrag) {
             // determine the distance this mouse move event is going in each direction
             if (this.oldClientPosition) {
