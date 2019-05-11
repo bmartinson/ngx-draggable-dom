@@ -147,7 +147,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     @HostListener("touchstart", ["$event"])
-    private onTouchStart(event: TouchEvent): void {
+    private onTouchStart(event: TouchEvent | any): void {
         if (this.handle !== undefined && event.target !== this.handle) {
             return;
         }
@@ -157,7 +157,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     @HostListener("document:touchmove", ["$event"])
-    private onTouchMove(event: TouchEvent): void {
+    private onTouchMove(event: TouchEvent | any): void {
         if (this.moving && this.allowDrag) {
             // determine the distance this mouse move event is going in each direction
             if (this.oldClientPosition) {
