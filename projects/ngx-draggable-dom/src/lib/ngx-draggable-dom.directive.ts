@@ -21,6 +21,7 @@ export interface IMoveEvent {
     selector: "[ngxDraggableDom]",
 })
 export class NgxDraggableDomDirective implements OnInit {
+
     @Output() private started: EventEmitter<IMoveEvent>;
     @Output() private stopped: EventEmitter<IMoveEvent>;
     @Output() private moved: EventEmitter<IMoveEvent>;
@@ -411,4 +412,5 @@ export class NgxDraggableDomDirective implements OnInit {
         this.renderer.setStyle(this.el.nativeElement, "-moz-transform", "");
         this.renderer.setStyle(this.el.nativeElement, "-o-transform", "");
     }
+
 }
