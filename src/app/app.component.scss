@@ -6,9 +6,13 @@
     width: 100%;
 }
 
-.ng-dd-col {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+.ng-dd-bounds {
+    display: block;
+    border: 1px dashed black;
+    width: 600px;
+    height: 600px;
+}
+
+.ng-dd-subtle-border {
+    border: 1px dashed #cccccc;
 }

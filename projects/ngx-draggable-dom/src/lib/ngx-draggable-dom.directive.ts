@@ -1,31 +1,18 @@
 import {Directive, ElementRef, EventEmitter, HostListener, Inject, Input, OnInit, Output, Renderer2} from "@angular/core";
+import { NgxDraggableBoundsCheckEvent } from "./classes/ngx-draggable-bounds-check-event";
+import { NgxDraggableMoveEvent } from "./classes/ngx-draggable-move-event";
 
-export interface IPosition {
-    x: number;
-    y: number;
-}
-
-export interface IBounds {
-    top: boolean;
-    right: boolean;
-    bottom: boolean;
-    left: boolean;
-}
-
-export interface IMoveEvent {
-    target: any;
-    position: IPosition;
-}
+const MAX_SAFE_Z_INDEX = 16777271;
 
 @Directive({
     selector: "[ngxDraggableDom]",
 })
 export class NgxDraggableDomDirective implements OnInit {
 
-    @Output() private started: EventEmitter<IMoveEvent>;
-    @Output() private stopped: EventEmitter<IMoveEvent>;
-    @Output() private moved: EventEmitter<IMoveEvent>;
-    @Output() private edge: EventEmitter<IBounds>;
+    @Output() private started: EventEmitter<NgxDraggableMoveEvent>;
+    @Output() private stopped: EventEmitter<NgxDraggableMoveEvent>;
+    @Output() private moved: EventEmitter<NgxDraggableMoveEvent>;
+    @Output() private edge: EventEmitter<NgxDraggableBoundsCheckEvent>;
 
     @Input() private handle: HTMLElement;
     @Input() private bounds: HTMLElement;
@@ -35,59 +22,65 @@ export class NgxDraggableDomDirective implements OnInit {
     private moving: boolean;
     private constrainedX: boolean;
     private constrainedY: boolean;
-    private clientMoving: IPosition;
-    private oldClientPosition: IPosition;
-    private original: IPosition;
-    private naturalPosition: IPosition;
-    private oldTrans: IPosition;
-    private tempTrans: IPosition;
+    private clientMoving: DOMPoint;
+    private oldClientPosition: DOMPoint;
+    private original: DOMPoint;
+    private naturalPosition: DOMPoint;
+    private oldTrans: DOMPoint;
+    private tempTrans: DOMPoint;
     private oldZIndex: string;
     private oldPosition: string;
-    private curTrans: IPosition;
+    private curTrans: DOMPoint;
 
+    /**
+     * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+     *
+     * @param enabled Whether the draggable behavior should be turned on or off.
+     */
     @Input("ngxDraggableDom")
-    public set ngxDraggableDom(setting: boolean) {
-        // if no value is provided for the attribute directive name, then turn it on
-        if (setting === undefined || setting === null) {
-            setting = true;
+    public set ngxDraggableDom(enabled: boolean) {
+        // if no value is provided for the attribute directive name, then turn it on by default
+        if (enabled === undefined || enabled === null) {
+            enabled = true;
         }
 
-        // turn on the directive setting
-        this.allowDrag = !!setting;
+        // allow dragging if we are enabled
+        this.allowDrag = !!enabled;
 
-        const element = this.handle ? this.handle : this.el.nativeElement;
+        // get the element that will be used to make the element draggable
+        const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
 
+        // if we are allowed to drag, provide the draggable class, otherwise remove it
         if (this.allowDrag) {
-            this.renderer.addClass(element, "ng-draggable");
+            this.renderer.addClass(draggableControl, "ngx-draggable");
         } else {
-            this.renderer.removeClass(element, "ng-draggable");
+            this.renderer.removeClass(draggableControl, "ngx-draggable");
         }
     }
 
+    /**
+     * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+     *
+     * @return True if the element is draggable.
+     */
     public get ngxDraggableDom(): boolean {
         return !!this.allowDrag;
     }
 
     constructor(@Inject(ElementRef) private el: ElementRef, @Inject(Renderer2) private renderer: Renderer2) {
-        this.started = new EventEmitter<IMoveEvent>();
-        this.stopped = new EventEmitter<IMoveEvent>();
-        this.moved = new EventEmitter<IMoveEvent>();
-        this.edge = new EventEmitter<IBounds>();
+        this.started = new EventEmitter<NgxDraggableMoveEvent>();
+        this.stopped = new EventEmitter<NgxDraggableMoveEvent>();
+        this.moved = new EventEmitter<NgxDraggableMoveEvent>();
+        this.edge = new EventEmitter<NgxDraggableBoundsCheckEvent>();
 
-        this.constrainByBounds = false;
+        this.constrainByBounds = this.moving = this.constrainedX = this.constrainedY = false;
         this.allowDrag = true;
-        this.moving = false;
-        this.constrainedX = false;
-        this.constrainedY = false;
-        this.clientMoving = {x: 0, y: 0} as IPosition;
-        this.oldClientPosition = null;
-        this.original = null;
-        this.naturalPosition = null;
-        this.oldTrans = {x: 0, y: 0} as IPosition;
-        this.tempTrans = {x: 0, y: 0} as IPosition;
-        this.oldZIndex = "";
-        this.oldPosition = "";
-        this.curTrans = {x: 0, y: 0} as IPosition;
+        this.oldClientPosition = this.original = this.naturalPosition = null;
+        this.oldZIndex = this.oldPosition = "";
+        this.clientMoving = new DOMPoint(0, 0);
+        this.oldTrans = new DOMPoint(0, 0);
+        this.tempTrans = new DOMPoint(0, 0);
+        this.curTrans = new DOMPoint(0, 0);
     }
 
     /**
@@ -95,13 +88,15 @@ export class NgxDraggableDomDirective implements OnInit {
      */
     public ngOnInit(): void {
         if (this.allowDrag) {
-            const element: any = this.handle ? this.handle : this.el.nativeElement;
-            this.renderer.addClass(element, "ng-draggable");
+            this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-draggable");
         }
     }
 
+    /* * * * * Event Handlers * * * * */
+
     @HostListener("mousedown", ["$event"])
     private onMouseDown(event: any): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
@@ -111,12 +106,13 @@ export class NgxDraggableDomDirective implements OnInit {
             return;
         }
 
-        this.original = {x: event.clientX, y: event.clientY} as IPosition;
+        this.original = {x: event.clientX, y: event.clientY} as DOMPoint;
         this.pickUp();
     }
 
     @HostListener("document:mouseup", ["$event"])
     private onMouseUp(event: Event): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
@@ -125,14 +121,21 @@ export class NgxDraggableDomDirective implements OnInit {
 
     @HostListener("document:mouseleave", ["$event"])
     private onMouseLeave(event: Event): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
         this.putBack();
+
+        this.moving = false;
     }
 
     @HostListener("document:mousemove", ["$event"])
     private onMouseMove(event: MouseEvent): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
+        event.stopImmediatePropagation();
+        event.preventDefault();
+
         if (this.moving && this.allowDrag) {
             // determine the distance this mouse move event is going in each direction
             if (this.oldClientPosition) {
@@ -145,13 +148,14 @@ export class NgxDraggableDomDirective implements OnInit {
         }
 
         // after moving, track our new location and mark that we are no longer moving
-        this.oldClientPosition = {x: event.clientX, y: event.clientY} as IPosition;
+        this.oldClientPosition = {x: event.clientX, y: event.clientY} as DOMPoint;
         this.clientMoving.x = this.clientMoving.y = 0;
     }
 
     // Support Touch Events:
     @HostListener("document:touchend", ["$event"])
     private onTouchEnd(event: TouchEvent | any): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
@@ -160,6 +164,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
     @HostListener("touchstart", ["$event"])
     private onTouchStart(event: TouchEvent | any): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
@@ -167,12 +172,13 @@ export class NgxDraggableDomDirective implements OnInit {
             return;
         }
 
-        this.original = {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY} as IPosition;
+        this.original = {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY} as DOMPoint;
         this.pickUp();
     }
 
     @HostListener("document:touchmove", ["$event"])
     private onTouchMove(event: TouchEvent | any): void {
+        // stop all default behavior and propagation of the event so it is fully consumed by us
         event.stopImmediatePropagation();
         event.preventDefault();
 
@@ -188,12 +194,14 @@ export class NgxDraggableDomDirective implements OnInit {
         }
 
         // after moving, track our new location and mark that we are no longer moving
-        this.oldClientPosition = {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY} as IPosition;
+        this.oldClientPosition = {x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY} as DOMPoint;
         this.clientMoving.x = this.clientMoving.y = 0;
     }
 
+    /* * * * * Draggable Logic * * * * */
+
     /**
-     * Main logic for moving the element via a transform while it is picked up.
+     * Moves the element to a specified coordinate and performs any necessary boundary checking.
      *
      * @param x The x position to move the element to.
      * @param y The y position to move the element to.
@@ -201,7 +209,7 @@ export class NgxDraggableDomDirective implements OnInit {
     private moveTo(x: number, y: number): void {
         if (this.original) {
             // check the bounds
-            const boundsResponse = this.boundsCheck();
+            const boundsResponse: NgxDraggableBoundsCheckEvent = this.boundsCheck();
 
             // calculate the new translation
             this.tempTrans.x = x - this.original.x;
@@ -218,8 +226,8 @@ export class NgxDraggableDomDirective implements OnInit {
             if (boundsResponse) {
                 if (this.constrainByBounds) {
                     // get the bounding client rectangles for the element and boundary element
-                    const boundary = this.bounds.getBoundingClientRect();
-                    const elem = this.el.nativeElement.getBoundingClientRect();
+                    const boundary: ClientRect = this.bounds.getBoundingClientRect();
+                    const elBounds: ClientRect = this.el.nativeElement.getBoundingClientRect();
 
                     // check to constrain in the x direction
                     if ((!boundsResponse.left && boundsResponse.right && this.clientMoving.x <= 0) ||
@@ -227,8 +235,8 @@ export class NgxDraggableDomDirective implements OnInit {
                         transX = boundary.left - this.naturalPosition.x;
                         this.constrainedX = true;
                     } else if ((boundsResponse.left && !boundsResponse.right && this.clientMoving.x >= 0) ||
-                        this.naturalPosition.x + elem.width + transX > boundary.left + boundary.width) {
-                        transX = boundary.right - elem.width - this.naturalPosition.x;
+                        this.naturalPosition.x + elBounds.width + transX > boundary.left + boundary.width) {
+                        transX = boundary.right - elBounds.width - this.naturalPosition.x;
                         this.constrainedX = true;
                     }
 
@@ -239,8 +247,8 @@ export class NgxDraggableDomDirective implements OnInit {
                         this.tempTrans.y = transY;
                         this.constrainedY = true;
                     } else if ((boundsResponse.top && !boundsResponse.bottom && this.clientMoving.y >= 0) ||
-                        this.naturalPosition.y + elem.height + transY > boundary.top + boundary.height) {
-                        transY = boundary.bottom - elem.height - this.naturalPosition.y;
+                        this.naturalPosition.y + elBounds.height + transY > boundary.top + boundary.height) {
+                        transY = boundary.bottom - elBounds.height - this.naturalPosition.y;
                         this.constrainedY = true;
                     }
 
@@ -254,15 +262,17 @@ export class NgxDraggableDomDirective implements OnInit {
                 }
             }
 
-            // set up the translation property
-            const value = `translate(${transX}px, ${transY}px)`;
+            // set up the translation transform for all possible browser styles
+            const transform = `translate(${transX}px, ${transY}px)`;
+            this.renderer.setStyle(this.el.nativeElement, "transform", transform);
+            this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
+            this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
+            this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
+            this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+
+            // track the current translation placement
             this.curTrans.x = transX;
             this.curTrans.y = transY;
-            this.renderer.setStyle(this.el.nativeElement, "transform", value);
-            this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", value);
-            this.renderer.setStyle(this.el.nativeElement, "-ms-transform", value);
-            this.renderer.setStyle(this.el.nativeElement, "-moz-transform", value);
-            this.renderer.setStyle(this.el.nativeElement, "-o-transform", value);
 
             // emit the output of the bounds check
             if (boundsResponse) {
@@ -270,24 +280,23 @@ export class NgxDraggableDomDirective implements OnInit {
             }
 
             // emit the current translation
-            this.moved.emit({
-                target: this.el.nativeElement,
-                position: this.curTrans,
-            } as IMoveEvent);
+            this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
         }
     }
 
     /**
-     * Picks up the element so it can be moved.
+     * Puts the element into a state of being moved setting appropriate styles and firing movement events when
+     * the element is just beginning to move.
      */
     private pickUp(): void {
-        // get old z-index and position:
+        // get old z-index and position
         this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : "";
         this.oldPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : "";
 
         // always make sure our constrain flags are clear when we start
         this.constrainedX = this.constrainedY = false;
 
+        // fetch the old z-index and position from computing the style applied to the element
         if (window) {
             this.oldZIndex = window.getComputedStyle(
                 this.el.nativeElement,
@@ -299,10 +308,10 @@ export class NgxDraggableDomDirective implements OnInit {
             ).getPropertyValue("position");
         }
 
-        // setup default position:
+        // set a default position style
         let position = "relative";
 
-        // check if old position is draggable:
+        // check if old position is draggable
         if (this.oldPosition && (
             this.oldPosition === "absolute" ||
             this.oldPosition === "fixed" ||
@@ -311,50 +320,34 @@ export class NgxDraggableDomDirective implements OnInit {
             position = this.oldPosition;
         }
 
+        // set the position and z-index for when the object is in a dragging state
         this.renderer.setStyle(this.el.nativeElement, "position", position);
-        this.renderer.setStyle(this.el.nativeElement, "z-index", "99999");
+        this.renderer.setStyle(this.el.nativeElement, "z-index", String(MAX_SAFE_Z_INDEX));
 
+        // if we are not moving yet, emit the event to signal moving is beginning and start moving
         if (!this.moving) {
-            this.started.emit({
-                target: this.el.nativeElement,
-                position: this.curTrans,
-            } as IMoveEvent);
+            // fire the event to signal that the element has begun moving
+            this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
+
+            // flag that we are now in a state of movement
             this.moving = true;
 
-            // add the ng-dragging class to the element we're interacting with
-            const element = this.handle ? this.handle : this.el.nativeElement;
-            this.renderer.addClass(element, "ng-dragging");
+            // add the ngx-dragging class to the element we're interacting with
+            this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
         }
 
+        // track the natural position of the element (the window relative position of the element)
         if (!this.naturalPosition) {
             this.naturalPosition = {
                 x: this.el.nativeElement.getBoundingClientRect().left,
                 y: this.el.nativeElement.getBoundingClientRect().top,
-            } as IPosition;
+            } as DOMPoint;
         }
     }
 
     /**
-     * Uses defined boundary elements to check that the positioning is within the appropriate bounds.
-     */
-    private boundsCheck(): IBounds {
-        // don"t perform the bounds checking if the user has not requested it
-        if (!this.bounds) {
-            return null;
-        }
-
-        const boundary = this.bounds.getBoundingClientRect();
-        const elem = this.el.nativeElement.getBoundingClientRect();
-        return {
-            top: boundary.top < elem.top,
-            right: boundary.right > elem.right,
-            bottom: boundary.bottom > elem.bottom,
-            left: boundary.left < elem.left,
-        } as IBounds;
-    }
-
-    /**
-     * Puts the element back in the position it belongs.
+     * Puts the element element down following some movement. This will fire the stopped event to signal that
+     * dragging is complete.
      */
     private putBack(): void {
         if (this.oldZIndex) {
@@ -363,23 +356,25 @@ export class NgxDraggableDomDirective implements OnInit {
             this.el.nativeElement.style.removeProperty("z-index");
         }
 
+        // if we are currently moving, then we can successfully put down to signal some movement actually occurred
         if (this.moving) {
             // emit that we have stopped moving
-            this.stopped.emit({
-                target: this.el.nativeElement,
-                position: this.curTrans,
-            } as IMoveEvent);
+            this.stopped.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
 
-            // if the user wants bounds checking, do a check and emit the boundaries
+            // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
             if (this.bounds) {
-                this.edge.emit(this.boundsCheck());
+                const boundsResponse: NgxDraggableBoundsCheckEvent = this.boundsCheck();
+                if (boundsResponse) {
+                    this.edge.emit(boundsResponse);
+                }
             }
 
+            // mark that we are no longer moving
             this.moving = false;
 
             // remove the ng-dragging class to the element we're interacting with
             const element = this.handle ? this.handle : this.el.nativeElement;
-            this.renderer.removeClass(element, "ng-dragging");
+            this.renderer.removeClass(element, "ngx-dragging");
 
             // if we're constrained just use the tempTrans value set by moveTo, else add to our last trans
             if (this.constrainedX) {
@@ -405,30 +400,48 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     /**
-     * This function resets the state of the DOM element that ngDraggable was set on. This will reset all
-     * of the private globals necessary for calculating placement but will not reset the current state of
-     * the ngDraggable flag passed in by the user.
+     * Uses the defined boundary element and checks for an intersection with the draggable element to determine
+     * if any edge has collided with one another.
+     *
+     * @return A NgxDraggableBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
+     */
+    private boundsCheck(): NgxDraggableBoundsCheckEvent | null {
+        // don"t perform the bounds checking if the user has not requested it
+        if (!this.bounds) {
+            return null;
+        }
+
+        // get the bounding rectangles for the the element and the bounds
+        const bounds: ClientRect = this.bounds.getBoundingClientRect();
+        const elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
+
+        return new NgxDraggableBoundsCheckEvent(
+            bounds.top < elBounds.top,
+            bounds.right > elBounds.right,
+            bounds.bottom > elBounds.bottom,
+            bounds.left < elBounds.left,
+        );
+    }
+
+    /**
+     * Resets the state of the element. This will reset all positioning and movement data
+     * but will not modify the current state of any data bound properties.
      */
     public reset(): void {
-        this.moving = false;
-        this.constrainedX = false;
-        this.constrainedY = false;
-        this.clientMoving = {x: 0, y: 0} as IPosition;
-        this.oldClientPosition = null;
-        this.original = null;
-        this.naturalPosition = null;
-        this.oldTrans = {x: 0, y: 0} as IPosition;
-        this.tempTrans = {x: 0, y: 0} as IPosition;
-        this.oldZIndex = "";
-        this.oldPosition = "";
-        this.curTrans = {x: 0, y: 0} as IPosition;
+        this.moving = this.constrainedX = this.constrainedY = false;
+        this.oldClientPosition = this.original = this.naturalPosition = null;
+        this.oldZIndex = this.oldPosition = "";
+
+        // reset all stored positions without defining a new object
+        this.clientMoving.x = this.clientMoving.y = this.oldTrans.x = this.oldTrans.y =
+        this.tempTrans.x = this.tempTrans.y = this.curTrans.x = this.curTrans.y = 0;
 
         // reset the transform value on the nativeElement
-        this.renderer.setStyle(this.el.nativeElement, "transform", "");
-        this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", "");
-        this.renderer.setStyle(this.el.nativeElement, "-ms-transform", "");
-        this.renderer.setStyle(this.el.nativeElement, "-moz-transform", "");
-        this.renderer.setStyle(this.el.nativeElement, "-o-transform", "");
+        this.renderer.removeStyle(this.el.nativeElement, "transform");
+        this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
+        this.renderer.removeStyle(this.el.nativeElement, "-ms-transform");
+        this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
+        this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
     }
 
 }

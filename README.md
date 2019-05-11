@@ -98,12 +98,11 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 When `ngxDraggableDom` is enabled on some element, the `ng-draggable` class is automatically assigned to it. When the user is actively dragging the element, the class `ng-dragging` is applied to the element (or the specified handle). You can use these to customize the look and feel for when you are interacting with the element. For example, change the cursor style for draggable elements in your page by doing the following:
 
 ```css
-.ng-draggable {
+.ngx-draggable {
   cursor: move;
 }
 
-.ng-dragging {
+.ngx-dragging {
   cursor: grabbing !important;
 }
 ```
-
