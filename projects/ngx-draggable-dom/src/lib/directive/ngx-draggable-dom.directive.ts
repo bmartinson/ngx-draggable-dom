@@ -22,6 +22,7 @@ export class NgxDraggableDomDirective implements OnInit {
   private moving: boolean;
   private constrainedX: boolean;
   private constrainedY: boolean;
+  private computedRotation: number;
   private clientMoving: DOMPoint;
   private oldClientPosition: DOMPoint;
   private original: DOMPoint;
@@ -77,6 +78,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.allowDrag = true;
     this.oldClientPosition = this.original = this.naturalPosition = null;
     this.oldZIndex = this.oldPosition = "";
+    this.computedRotation = 0;
     this.clientMoving = new DOMPoint(0, 0);
     this.oldTrans = new DOMPoint(0, 0);
     this.tempTrans = new DOMPoint(0, 0);
@@ -143,8 +145,6 @@ export class NgxDraggableDomDirective implements OnInit {
     event.preventDefault();
 
     this.putBack();
-
-    this.moving = false;
   }
 
   /**
@@ -239,6 +239,27 @@ export class NgxDraggableDomDirective implements OnInit {
   /* * * * * Draggable Logic * * * * */
 
   /**
+   * Resets the state of the element. This will reset all positioning and movement data
+   * but will not modify the current state of any data bound properties.
+   */
+  public reset(): void {
+    this.moving = this.constrainedX = this.constrainedY = false;
+    this.oldClientPosition = this.original = this.naturalPosition = null;
+    this.oldZIndex = this.oldPosition = "";
+
+    // reset all stored positions without defining a new object
+    this.clientMoving.x = this.clientMoving.y = this.oldTrans.x = this.oldTrans.y =
+      this.tempTrans.x = this.tempTrans.y = this.curTrans.x = this.curTrans.y = this.computedRotation = 0;
+
+    // reset the transform value on the nativeElement
+    this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
+    this.renderer.removeStyle(this.el.nativeElement, "-ms-transform");
+    this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
+    this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
+    this.renderer.removeStyle(this.el.nativeElement, "transform");
+  }
+
+  /**
    * Moves the element to a specified coordinate and performs any necessary boundary checking.
    *
    * @param x The x position to move the element to.
@@ -248,6 +269,8 @@ export class NgxDraggableDomDirective implements OnInit {
     let boundsResponse: NgxDraggableBoundsCheckEvent;
     let matrix: number[];
     let transform: string;
+    let boundary: ClientRect;
+    let elBounds: ClientRect;
 
     if (this.original) {
       // check the bounds
@@ -264,12 +287,14 @@ export class NgxDraggableDomDirective implements OnInit {
       // make sure the constrained tracking variables are cleared
       this.constrainedX = this.constrainedY = false;
 
+      // fetch the element's bounding box
+      elBounds = this.el.nativeElement.getBoundingClientRect();
+
       // if the bounds were checked, adjust the positioning of the element to prevent dragging outside the bounds
       if (boundsResponse) {
         if (this.constrainByBounds) {
           // get the bounding client rectangles for the element and boundary element
-          const boundary: ClientRect = this.bounds.getBoundingClientRect();
-          const elBounds: ClientRect = this.el.nativeElement.getBoundingClientRect();
+          boundary = this.bounds.getBoundingClientRect();
 
           // check to constrain in the x direction
           if ((!boundsResponse.left && boundsResponse.right && this.clientMoving.x <= 0) ||
@@ -306,32 +331,14 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
       if (window) {
-        // get the computed transform style
-        transform = window.getComputedStyle(
-          this.el.nativeElement,
-          null,
-        ).getPropertyValue("transform");
-
-        // strip non matrix values from the string
-        transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
-
         // create the numerical matrix we will use
-        matrix = [1, 0, 0, 1, 0, 0];
+        matrix = this.getTransformMatrixForElement(this.el.nativeElement);
 
-        if (transform !== "none") {
-          // split the string based on commas
-          let transformMatrix: string[] = transform.split(",");
-
-          // convert the values of the matrix to numbers and add to our numerical matrix
-          for (let i = 0; i < transformMatrix.length; i++) {
-            matrix[i] = +transformMatrix[i];
-          }
-          transformMatrix = null;
-        }
-
+        // rotate the translation in the opposite direction to normalize
+        const rotatedTranslation: DOMPoint = this.rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
         // update the x and y values as part of the matrix
-        matrix[4] = transX;
-        matrix[5] = transY;
+        matrix[4] = rotatedTranslation.x;
+        matrix[5] = rotatedTranslation.y;
 
         // convert the matrix to a string based css matrix definition
         transform = "matrix(" + matrix.join() + ")";
@@ -366,9 +373,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // clean up memory
-    boundsResponse = null;
-    matrix = null;
-    transform = null;
+    boundsResponse = matrix = transform = elBounds = boundary = null;
   }
 
   /**
@@ -418,6 +423,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // flag that we are now in a state of movement
       this.moving = true;
+
+      // compute the current rotation of all parent nodes
+      this.computedRotation = this.getParentalRotationContext(this.el.nativeElement.parentElement);
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
@@ -486,6 +494,9 @@ export class NgxDraggableDomDirective implements OnInit {
     // clear our variables used to track movement direction during mouse move events
     this.clientMoving.x = this.clientMoving.y = 0;
     this.oldClientPosition = null;
+
+    // reset the calculated rotation in case something changes when we're not dragging
+    this.computedRotation = 0;
   }
 
   /**
@@ -513,24 +524,79 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
-   * Resets the state of the element. This will reset all positioning and movement data
-   * but will not modify the current state of any data bound properties.
+   * Calculates the computed transform matrix for a given element.
+   *
+   * @param el The html element that we want to find the computed transform matrix for.
+   * @return The computed transform matrix as an array of numbers.
    */
-  public reset(): void {
-    this.moving = this.constrainedX = this.constrainedY = false;
-    this.oldClientPosition = this.original = this.naturalPosition = null;
-    this.oldZIndex = this.oldPosition = "";
+  private getTransformMatrixForElement(el: HTMLElement): number[] {
+    // create the numerical matrix we will use
+    const matrix: number[] = [1, 0, 0, 1, 0, 0];
 
-    // reset all stored positions without defining a new object
-    this.clientMoving.x = this.clientMoving.y = this.oldTrans.x = this.oldTrans.y =
-      this.tempTrans.x = this.tempTrans.y = this.curTrans.x = this.curTrans.y = 0;
+    if (window) {
+      // get the computed transform style
+      let transform = window.getComputedStyle(
+        el,
+        null,
+      ).getPropertyValue("transform");
 
-    // reset the transform value on the nativeElement
-    this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-ms-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "transform");
+      // strip non matrix values from the string
+      transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
+
+      // if we have a transform set, convert the string matrix to a numerical one
+      if (transform !== "none") {
+        // split the string based on commas
+        let transformMatrix: string[] = transform.split(",");
+
+        // convert the values of the matrix to numbers and add to our numerical matrix
+        for (let i = 0; i < transformMatrix.length; i++) {
+          matrix[i] = +transformMatrix[i];
+        }
+        transformMatrix = null;
+      }
+    }
+
+    return matrix;
+  }
+
+  /**
+   * Finds the overall computed rotation of the element's parent nodes so we can get an accurate
+   * reading on the visual rotation of the element so we can appropriately adjust matrix translation
+   * adjustments.
+   *
+   * @return The overall rotation of all parent nodes.
+   */
+  private getParentalRotationContext(node: HTMLElement, rotation = 0): number {
+    // if we can't calculate the computed style or we have no node to analyze, return the current calculated rotation
+    if (!node || !window) {
+      return rotation;
+    }
+
+    // get the computed transform style matrix
+    const matrix: number[] = this.getTransformMatrixForElement(node);
+
+    // if we have reached the body, stop processing beyond here
+    if (node.nodeName === "BODY") {
+      return rotation + ((Math.acos(matrix[0]) * 180) / Math.PI);
+    }
+
+    // search up the DOM tree calculating the rotation
+    return this.getParentalRotationContext(node.parentElement, rotation + ((Math.acos(matrix[0]) * 180) / Math.PI));
+  }
+
+  /**
+   * Rotates a given DOMPoint around another pivot DOMPoint.
+   *
+   * @param point The point to be rotated.
+   * @param pivot The pivot point that we are rotating the DOMPoint, point, around.
+   * @param angle The angle at which we want to rotate the DOMPoint, point, around the pivot point.
+   */
+  private rotatePoint(point: DOMPoint, pivot: DOMPoint, angle: number): DOMPoint {
+    const radians: number = angle * (Math.PI / 180);
+    const rotatedX: number = Math.cos(radians) * (point.x - pivot.x) - Math.sin(radians) * (point.y - pivot.y) + pivot.x;
+    const rotatedY: number = Math.sin(radians) * (point.x - pivot.x) + Math.cos(radians) * (point.y - pivot.y) + pivot.y;
+
+    return new DOMPoint(rotatedX, rotatedY);
   }
 
 }
