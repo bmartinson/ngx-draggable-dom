@@ -245,9 +245,13 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param y The y position to move the element to.
    */
   private moveTo(x: number, y: number): void {
+    let boundsResponse: NgxDraggableBoundsCheckEvent;
+    let matrix: number[];
+    let transform: string;
+
     if (this.original) {
       // check the bounds
-      const boundsResponse: NgxDraggableBoundsCheckEvent = this.boundsCheck();
+      boundsResponse = this.boundsCheck();
 
       // calculate the new translation
       this.tempTrans.x = x - this.original.x;
@@ -300,9 +304,6 @@ export class NgxDraggableDomDirective implements OnInit {
         }
       }
 
-      // define a transform string to manipulate
-      let transform: string;
-
       // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
       if (window) {
         // get the computed transform style
@@ -315,7 +316,7 @@ export class NgxDraggableDomDirective implements OnInit {
         transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
 
         // create the numerical matrix we will use
-        const matrix: number[] = [1, 0, 0, 1, 0, 0];
+        matrix = [1, 0, 0, 1, 0, 0];
 
         if (transform !== "none") {
           // split the string based on commas
@@ -363,6 +364,11 @@ export class NgxDraggableDomDirective implements OnInit {
       // emit the current translation
       this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
     }
+
+    // clean up memory
+    boundsResponse = null;
+    matrix = null;
+    transform = null;
   }
 
   /**
@@ -370,6 +376,9 @@ export class NgxDraggableDomDirective implements OnInit {
    * the element is just beginning to move.
    */
   private pickUp(): void {
+    // set a default position style
+    let position = "relative";
+
     // get old z-index and position based on the direct style access
     this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : "";
     this.oldPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : "";
@@ -388,9 +397,6 @@ export class NgxDraggableDomDirective implements OnInit {
         null,
       ).getPropertyValue("position");
     }
-
-    // set a default position style
-    let position = "relative";
 
     // check if old position is draggable
     if (this.oldPosition && (
@@ -424,6 +430,9 @@ export class NgxDraggableDomDirective implements OnInit {
         this.el.nativeElement.getBoundingClientRect().top,
       );
     }
+
+    // clean up memory
+    position = null;
   }
 
   /**
@@ -454,8 +463,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.moving = false;
 
       // remove the ng-dragging class to the element we're interacting with
-      const element = this.handle ? this.handle : this.el.nativeElement;
-      this.renderer.removeClass(element, "ngx-dragging");
+      this.renderer.removeClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
 
       // if we're constrained just use the tempTrans value set by moveTo, else add to our last trans
       if (this.constrainedX) {
