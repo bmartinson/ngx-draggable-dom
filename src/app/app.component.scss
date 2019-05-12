@@ -1,18 +1,31 @@
 .ng-dd-row {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+
+  &#ng-dd-custom-style-example {
+
+    // custom override for cursor styling examples
+    .ngx-draggable {
+        cursor: grab;
+    }
+
+    // custom override for cursor styling examples
+    .ngx-dragging {
+        cursor: grabbing;
+    }
+  }
 }
 
 .ng-dd-bounds {
-    display: block;
-    border: 1px dashed black;
-    width: 600px;
-    height: 600px;
+  display: block;
+  border: 1px dashed black;
+  width: 600px;
+  height: 600px;
 }
 
 .ng-dd-subtle-border {
-    border: 1px dashed #cccccc;
+  border: 1px dashed #cccccc;
 }
