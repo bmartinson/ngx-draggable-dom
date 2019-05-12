@@ -94,22 +94,34 @@ export class NgxDraggableDomDirective implements OnInit {
 
   /* * * * * Event Handlers * * * * */
 
+  /**
+   * Event handler for when the element starts moving via mouse interaction.
+   *
+   * @param event The mouse event for the click event.
+   */
   @HostListener("mousedown", ["$event"])
   private onMouseDown(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
     event.preventDefault();
 
-    // 1. skip right click;
-    // 2. if handle is set, the element can only be moved by handle
+    // skip right clicks and clicks on the element if it can only be moved by the handle
     if (event.button === 2 || (this.handle !== undefined && event.target !== this.handle)) {
       return;
     }
 
-    this.original = { x: event.clientX, y: event.clientY } as DOMPoint;
+    // save the starting position of the drag event
+    this.original = new DOMPoint(event.clientX, event.clientY);
+
+    // pick up the element for dragging
     this.pickUp();
   }
 
+  /**
+   * Event handler for when the element is done being dragged as indicated by a mouse release.
+   *
+   * @param event The mouse event for the click release event.
+   */
   @HostListener("mouseup", ["$event"])
   private onMouseUp(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
@@ -119,6 +131,11 @@ export class NgxDraggableDomDirective implements OnInit {
     this.putBack();
   }
 
+  /**
+   * Event handler for when the mouse leaves the element so the drag event ends.
+   *
+   * @param event The mouse event for when the mouse leaves the element.
+   */
   @HostListener("mouseleave", ["$event"])
   private onMouseLeave(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
@@ -130,6 +147,12 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moving = false;
   }
 
+  /**
+   * Event handler for when the mouse moves. If the element is currently picked up, then we will apply transformations
+   * to the element to move it.
+   *
+   * @param event The mouse event for the movement from the user's mouse.
+   */
   @HostListener("mousemove", ["$event"])
   private onMouseMove(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
@@ -148,19 +171,15 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // after moving, track our new location and mark that we are no longer moving
-    this.oldClientPosition = { x: event.clientX, y: event.clientY } as DOMPoint;
+    this.oldClientPosition = new DOMPoint(event.clientX, event.clientY);
     this.clientMoving.x = this.clientMoving.y = 0;
   }
 
-  @HostListener("touchend", ["$event"])
-  private onTouchEnd(event: TouchEvent | any): void {
-    // stop all default behavior and propagation of the event so it is fully consumed by us
-    event.stopImmediatePropagation();
-    event.preventDefault();
-
-    this.putBack();
-  }
-
+  /**
+   * Event handler for when the element starts moving via a touch event.
+   *
+   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   */
   @HostListener("touchstart", ["$event"])
   private onTouchStart(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
@@ -171,10 +190,30 @@ export class NgxDraggableDomDirective implements OnInit {
       return;
     }
 
-    this.original = { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY } as DOMPoint;
+    this.original = new DOMPoint(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+
     this.pickUp();
   }
 
+  /**
+   * Event handler for when the element is done being moved via a touch event.
+   *
+   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   */
+  @HostListener("touchend", ["$event"])
+  private onTouchEnd(event: TouchEvent | any): void {
+    // stop all default behavior and propagation of the event so it is fully consumed by us
+    event.stopImmediatePropagation();
+    event.preventDefault();
+
+    this.putBack();
+  }
+
+  /**
+   * Event handler for when the element is moved via a touch event.
+   *
+   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   */
   @HostListener("touchmove", ["$event"])
   private onTouchMove(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
@@ -193,7 +232,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // after moving, track our new location and mark that we are no longer moving
-    this.oldClientPosition = { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY } as DOMPoint;
+    this.oldClientPosition = new DOMPoint(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
     this.clientMoving.x = this.clientMoving.y = 0;
   }
 
@@ -337,10 +376,10 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // track the natural position of the element (the window relative position of the element)
     if (!this.naturalPosition) {
-      this.naturalPosition = {
-        x: this.el.nativeElement.getBoundingClientRect().left,
-        y: this.el.nativeElement.getBoundingClientRect().top,
-      } as DOMPoint;
+      this.naturalPosition = new DOMPoint(
+        this.el.nativeElement.getBoundingClientRect().left,
+        this.el.nativeElement.getBoundingClientRect().top,
+      );
     }
   }
 
