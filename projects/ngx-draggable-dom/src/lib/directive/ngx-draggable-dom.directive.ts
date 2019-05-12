@@ -300,13 +300,56 @@ export class NgxDraggableDomDirective implements OnInit {
         }
       }
 
-      // set up the translation transform for all possible browser styles
-      const transform = `translate(${transX}px, ${transY}px)`;
-      this.renderer.setStyle(this.el.nativeElement, "transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+      // define a transform string to manipulate
+      let transform: string;
+
+      // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
+      if (window) {
+        // get the computed transform style
+        transform = window.getComputedStyle(
+          this.el.nativeElement,
+          null,
+        ).getPropertyValue("transform");
+
+        // strip non matrix values from the string
+        transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
+
+        // create the numerical matrix we will use
+        const matrix: number[] = [1, 0, 0, 1, 0, 0];
+
+        if (transform !== "none") {
+          // split the string based on commas
+          let transformMatrix: string[] = transform.split(",");
+
+          // convert the values of the matrix to numbers and add to our numerical matrix
+          for (let i = 0; i < transformMatrix.length; i++) {
+            matrix[i] = +transformMatrix[i];
+          }
+          transformMatrix = null;
+        }
+
+        // update the x and y values as part of the matrix
+        matrix[4] = transX;
+        matrix[5] = transY;
+
+        // convert the matrix to a string based css matrix definition
+        transform = "matrix(" + matrix.join() + ")";
+
+        // set the style on the element
+        this.renderer.setStyle(this.el.nativeElement, "transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+      } else {
+        // set up the translation transform for all possible browser styles disregarding previous transform properties
+        transform = `translate(${transX}px, ${transY}px)`;
+        this.renderer.setStyle(this.el.nativeElement, "transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
+        this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+      }
 
       // track the current translation placement
       this.curTrans.x = transX;
