@@ -95,7 +95,7 @@ export class NgxDraggableDomDirective implements OnInit {
   /* * * * * Event Handlers * * * * */
 
   @HostListener("mousedown", ["$event"])
-  private onMouseDown(event: any): void {
+  private onMouseDown(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
     event.preventDefault();
@@ -110,8 +110,8 @@ export class NgxDraggableDomDirective implements OnInit {
     this.pickUp();
   }
 
-  @HostListener("document:mouseup", ["$event"])
-  private onMouseUp(event: Event): void {
+  @HostListener("mouseup", ["$event"])
+  private onMouseUp(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
     event.preventDefault();
@@ -119,8 +119,8 @@ export class NgxDraggableDomDirective implements OnInit {
     this.putBack();
   }
 
-  @HostListener("document:mouseleave", ["$event"])
-  private onMouseLeave(event: Event): void {
+  @HostListener("mouseleave", ["$event"])
+  private onMouseLeave(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
     event.preventDefault();
@@ -130,7 +130,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moving = false;
   }
 
-  @HostListener("document:mousemove", ["$event"])
+  @HostListener("mousemove", ["$event"])
   private onMouseMove(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -152,8 +152,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.clientMoving.x = this.clientMoving.y = 0;
   }
 
-  // Support Touch Events:
-  @HostListener("document:touchend", ["$event"])
+  @HostListener("touchend", ["$event"])
   private onTouchEnd(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -176,7 +175,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.pickUp();
   }
 
-  @HostListener("document:touchmove", ["$event"])
+  @HostListener("touchmove", ["$event"])
   private onTouchMove(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
