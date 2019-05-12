@@ -475,11 +475,11 @@ export class NgxDraggableDomDirective implements OnInit {
       this.tempTrans.x = this.tempTrans.y = this.curTrans.x = this.curTrans.y = 0;
 
     // reset the transform value on the nativeElement
-    this.renderer.removeStyle(this.el.nativeElement, "transform");
     this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
     this.renderer.removeStyle(this.el.nativeElement, "-ms-transform");
     this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
     this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
+    this.renderer.removeStyle(this.el.nativeElement, "transform");
   }
 
 }
