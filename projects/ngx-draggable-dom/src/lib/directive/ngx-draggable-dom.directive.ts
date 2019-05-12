@@ -327,7 +327,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * the element is just beginning to move.
    */
   private pickUp(): void {
-    // get old z-index and position
+    // get old z-index and position based on the direct style access
     this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : "";
     this.oldPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : "";
 
