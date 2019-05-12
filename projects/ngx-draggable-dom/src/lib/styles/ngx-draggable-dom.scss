@@ -1,0 +1,11 @@
+.ngx-draggable {
+  cursor: move;
+}
+
+.ngx-dragging {
+  cursor: move;
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+}
