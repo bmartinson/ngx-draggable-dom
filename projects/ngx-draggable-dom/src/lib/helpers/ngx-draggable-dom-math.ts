@@ -100,3 +100,55 @@ export function getTransformedCoordinate(
 
   return newP;
 }
+
+/**
+ * Calculates the bounding box for a given element defined by a center point, width, height, and rotation.
+ *
+ * @param p0 The center of the object that we need to find the bounding box for.
+ * @param w The width of the rectangle.
+ * @param h The height of the rectangle.
+ * @param rotation The rotation of the defined rectangle.
+ * @return The bounding box rectangle.
+ */
+export function getBoundingBox(p0: DOMPoint, w: number, h: number, rotation: number): DOMRect {
+  // get the non rotated top left corner of the object
+  const pTL: DOMPoint = new DOMPoint(p0.x - (w / 2), p0.y - (h / 2));
+
+  // get the transformed points around the center point
+  const tl1: DOMPoint = getTransformedCoordinate(p0, w, h, rotation, ElementHandle.TL);
+  const tr1: DOMPoint = getTransformedCoordinate(p0, w, h, rotation, ElementHandle.TR);
+  const br1: DOMPoint = getTransformedCoordinate(p0, w, h, rotation, ElementHandle.BR);
+  const bl1: DOMPoint = getTransformedCoordinate(p0, w, h, rotation, ElementHandle.BL);
+
+  // calculate the horizontal and vertical translation to center the object back
+  const pTransX: number = (tl1.x - pTL.x);
+  const pTransY: number = (tl1.y - pTL.y);
+
+  // calculate the rotated corners by factoring in the translations
+  const tl2: DOMPoint = new DOMPoint(tl1.x - pTransX, tl1.y - pTransY);
+  const tr2: DOMPoint = new DOMPoint(tr1.x - pTransX, tr1.y - pTransY);
+  const br2: DOMPoint = new DOMPoint(br1.x - pTransX, br1.y - pTransY);
+  const bl2: DOMPoint = new DOMPoint(bl1.x - pTransX, bl1.y - pTransY);
+
+  // calculate the bounding box top left and bottom right points
+  const bbPTL: DOMPoint = new DOMPoint(Number.MAX_VALUE, Number.MAX_VALUE);
+  const bbPBR: DOMPoint = new DOMPoint(Number.MIN_VALUE, Number.MIN_VALUE);
+  const pArr = [tl2, tr2, br2, bl2];
+  for (const curP of pArr) {
+    if (curP.x < bbPTL.x) {
+      bbPTL.x = curP.x;
+    }
+    if (curP.x > bbPBR.x) {
+      bbPBR.x = curP.x;
+    }
+
+    if (curP.y < bbPTL.y) {
+      bbPTL.y = curP.y;
+    }
+    if (curP.y > bbPBR.y) {
+      bbPBR.y = curP.y;
+    }
+  }
+
+  return new DOMRect(bbPTL.x, bbPTL.y, bbPBR.x - bbPTL.x, bbPBR.y - bbPTL.y);
+}

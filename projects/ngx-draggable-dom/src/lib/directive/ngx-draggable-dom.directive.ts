@@ -278,15 +278,6 @@ export class NgxDraggableDomDirective implements OnInit {
       // check the bounds
       boundsResponse = this.boundsCheck();
 
-      // debugging
-      if (!!boundsResponse) {
-        if (boundsResponse.hasCollision) {
-          console.warn("bounds checked", boundsResponse);
-        } else {
-          console.log("bounds checked", boundsResponse);
-        }
-      }
-
       // calculate the new translation
       this.tempTrans.x = x - this.original.x;
       this.tempTrans.y = y - this.original.y;
