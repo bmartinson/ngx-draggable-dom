@@ -4,6 +4,17 @@ import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
 
 const MAX_SAFE_Z_INDEX = 16777271;
 
+enum ElementHandle {
+  TL = "tl",
+  TR = "tr",
+  BL = "bl",
+  BR = "br",
+  L = "ml",
+  R = "mr",
+  T = "mt",
+  B = "mb",
+}
+
 @Directive({
   selector: "[ngxDraggableDom]",
 })
@@ -597,6 +608,58 @@ export class NgxDraggableDomDirective implements OnInit {
     const rotatedY: number = Math.sin(radians) * (point.x - pivot.x) + Math.cos(radians) * (point.y - pivot.y) + pivot.y;
 
     return new DOMPoint(rotatedX, rotatedY);
+  }
+
+  /**
+   * Find the coordinate point of the bounding box as defined by w and h and rotated by rotation degrees around point p0.
+   *
+   * @param p0 The center point of origin we are rotating around.
+   * @param w The width of the bounding box we are calculating.
+   * @param h The height of the bounding box we are calculating.
+   * @param rotation The degrees of rotation being applied to the box.
+   * @param coordinate The coordinate you would like "tl", "t", "tr", "r", "br", "b", "bl", "l"
+   * @return The requested point.
+   */
+  private getTransformedCoordinate(
+    p0: DOMPoint,
+    w: number,
+    h: number,
+    rotation: number,
+    coordinate: ElementHandle = ElementHandle.TL,
+  ): DOMPoint {
+    let newP: DOMPoint = new DOMPoint(p0.x - (w / 2), p0.y - (h / 2));
+
+    let p: DOMPoint;
+    if (coordinate === ElementHandle.TL) {
+      p = new DOMPoint(newP.x, newP.y);
+    } else if (coordinate === ElementHandle.TR) {
+      p = new DOMPoint(newP.x + w, newP.y);
+    } else if (coordinate === ElementHandle.BL) {
+      p = new DOMPoint(newP.x, newP.y + h);
+    } else if (coordinate === ElementHandle.BR) {
+      p = new DOMPoint(newP.x + w, newP.y + h);
+    } else if (coordinate === ElementHandle.L) {
+      p = new DOMPoint(newP.x, newP.y + (h / 2));
+    } else if (coordinate === ElementHandle.R) {
+      p = new DOMPoint(newP.x + w, newP.y + (h / 2));
+    } else if (coordinate === ElementHandle.T) {
+      p = new DOMPoint(newP.x + (w / 2), newP.y);
+    } else if (coordinate === ElementHandle.B) {
+      p = new DOMPoint(newP.x + (w / 2), newP.y + h);
+    } else {
+      return null;
+    }
+
+    const theta: number = rotation * Math.PI / 180;
+
+    // calculate the new coordinate point with rotation applied
+    const p0p = new DOMPoint(newP.x + (w / 2), newP.y + (h / 2));
+    newP = new DOMPoint(
+      ((p.x - p0p.x) * Math.cos(theta)) - ((p.y - p0p.y) * Math.sin(theta)) + p0p.x,
+      ((p.x - p0p.x) * Math.sin(theta)) + ((p.y - p0p.y) * Math.cos(theta)) + p0p.y,
+    );
+
+    return newP;
   }
 
 }
