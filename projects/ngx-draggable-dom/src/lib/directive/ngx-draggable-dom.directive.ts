@@ -571,6 +571,23 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
+   * Calculates the current rotation (in degrees) for a given HTMLElement using the computed transform style.
+   *
+   * @param el The HTMLElement to find the current rotation for.
+   */
+  private getRotationForElement(el: HTMLElement): number {
+    if (!el) {
+      return 0;
+    }
+
+    // get the computed transform style matrix
+    const matrix: number[] = this.getTransformMatrixForElement(el);
+
+    // calculate the rotation in degrees based on the transform matrix
+    return (Math.acos(matrix[0]) * 180) / Math.PI;
+  }
+
+  /**
    * Finds the overall computed rotation of the element's parent nodes so we can get an accurate
    * reading on the visual rotation of the element so we can appropriately adjust matrix translation
    * adjustments.
@@ -583,16 +600,13 @@ export class NgxDraggableDomDirective implements OnInit {
       return rotation;
     }
 
-    // get the computed transform style matrix
-    const matrix: number[] = this.getTransformMatrixForElement(node);
-
     // if we have reached the body, stop processing beyond here
     if (node.nodeName === "BODY") {
-      return rotation + ((Math.acos(matrix[0]) * 180) / Math.PI);
+      return rotation + this.getRotationForElement(node);
     }
 
     // search up the DOM tree calculating the rotation
-    return this.getParentalRotationContext(node.parentElement, rotation + ((Math.acos(matrix[0]) * 180) / Math.PI));
+    return this.getParentalRotationContext(node.parentElement, rotation + this.getRotationForElement(node));
   }
 
   /**
