@@ -2,6 +2,14 @@ img {
   border: 1px dashed #cccccc;
 }
 
+.ngx-dd-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
 .ngx-dd-row {
   display: flex;
   flex-direction: row;
@@ -16,7 +24,7 @@ img {
     border: 1px dashed black;
     width: 600px;
     height: 600px;
-    transform: rotate(45deg);
+    // transform: rotate(45deg);
 
     img {
       // transform: rotate(45deg);
