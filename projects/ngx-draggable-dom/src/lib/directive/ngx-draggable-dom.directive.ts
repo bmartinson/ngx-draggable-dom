@@ -287,6 +287,15 @@ export class NgxDraggableDomDirective implements OnInit {
       // check the bounds
       boundsResponse = this.boundsCheck();
 
+      // debugging
+      if (!!boundsResponse) {
+        if (boundsResponse.hasCollision) {
+          console.warn("bounds checked", boundsResponse);
+        } else {
+          console.log("bounds checked", boundsResponse);
+        }
+      }
+
       // calculate the new translation
       this.tempTrans.x = x - this.original.x;
       this.tempTrans.y = y - this.original.y;
@@ -294,6 +303,12 @@ export class NgxDraggableDomDirective implements OnInit {
       // calculate the default translation for this movement (without bounds constrain checking)
       let transX = this.tempTrans.x + this.oldTrans.x;
       let transY = this.tempTrans.y + this.oldTrans.y;
+
+      // rotate the translation in the opposite direction of the computed parent rotation to normalize
+      const rotatedTranslation: DOMPoint = this.rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
+
+      transX = rotatedTranslation.x;
+      transY = rotatedTranslation.y;
 
       // make sure the constrained tracking variables are cleared
       this.constrainedX = this.constrainedY = false;
@@ -304,31 +319,31 @@ export class NgxDraggableDomDirective implements OnInit {
       // if the bounds were checked, adjust the positioning of the element to prevent dragging outside the bounds
       if (boundsResponse) {
         if (this.constrainByBounds) {
-          // get the bounding client rectangles for the element and boundary element
+          // get the bounding client rectangles for the boundary element
           boundary = this.bounds.getBoundingClientRect();
 
           // check to constrain in the x direction
-          if ((!boundsResponse.left && boundsResponse.right && this.clientMoving.x <= 0) ||
-            this.naturalPosition.x + transX < boundary.left) {
-            transX = boundary.left - this.naturalPosition.x;
-            this.constrainedX = true;
-          } else if ((boundsResponse.left && !boundsResponse.right && this.clientMoving.x >= 0) ||
-            this.naturalPosition.x + elBounds.width + transX > boundary.left + boundary.width) {
-            transX = boundary.right - elBounds.width - this.naturalPosition.x;
-            this.constrainedX = true;
-          }
+          // if ((!boundsResponse.left && boundsResponse.right && this.clientMoving.x <= 0) ||
+          //   this.naturalPosition.x + transX < boundary.left) {
+          //   transX = boundary.left - this.naturalPosition.x;
+          //   this.constrainedX = true;
+          // } else if ((boundsResponse.left && !boundsResponse.right && this.clientMoving.x >= 0) ||
+          //   this.naturalPosition.x + elBounds.width + transX > boundary.left + boundary.width) {
+          //   transX = boundary.right - elBounds.width - this.naturalPosition.x;
+          //   this.constrainedX = true;
+          // }
 
           // check to constrain in the y direction
-          if ((!boundsResponse.top && boundsResponse.bottom && this.clientMoving.y <= 0) ||
-            this.naturalPosition.y + transY < boundary.top) {
-            transY = boundary.top - this.naturalPosition.y;
-            this.tempTrans.y = transY;
-            this.constrainedY = true;
-          } else if ((boundsResponse.top && !boundsResponse.bottom && this.clientMoving.y >= 0) ||
-            this.naturalPosition.y + elBounds.height + transY > boundary.top + boundary.height) {
-            transY = boundary.bottom - elBounds.height - this.naturalPosition.y;
-            this.constrainedY = true;
-          }
+          // if ((!boundsResponse.top && boundsResponse.bottom && this.clientMoving.y <= 0) ||
+          //   this.naturalPosition.y + transY < boundary.top) {
+          //   transY = boundary.top - this.naturalPosition.y;
+          //   this.tempTrans.y = transY;
+          //   this.constrainedY = true;
+          // } else if ((boundsResponse.top && !boundsResponse.bottom && this.clientMoving.y >= 0) ||
+          //   this.naturalPosition.y + elBounds.height + transY > boundary.top + boundary.height) {
+          //   transY = boundary.bottom - elBounds.height - this.naturalPosition.y;
+          //   this.constrainedY = true;
+          // }
 
           // if we constrained in one of the directions, update that direction's tempTrans value for putBack
           if (this.constrainedX) {
@@ -345,11 +360,9 @@ export class NgxDraggableDomDirective implements OnInit {
         // create the numerical matrix we will use
         matrix = this.getTransformMatrixForElement(this.el.nativeElement);
 
-        // rotate the translation in the opposite direction to normalize
-        const rotatedTranslation: DOMPoint = this.rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
         // update the x and y values as part of the matrix
-        matrix[4] = rotatedTranslation.x;
-        matrix[5] = rotatedTranslation.y;
+        matrix[4] = transX;
+        matrix[5] = transY;
 
         // convert the matrix to a string based css matrix definition
         transform = "matrix(" + matrix.join() + ")";
@@ -436,7 +449,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.moving = true;
 
       // compute the current rotation of all parent nodes
-      this.computedRotation = this.getParentalRotationContext(this.el.nativeElement.parentElement);
+      this.computedRotation = this.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
@@ -522,16 +535,98 @@ export class NgxDraggableDomDirective implements OnInit {
       return null;
     }
 
-    // get the bounding rectangles for the the element and the bounds
-    const bounds: ClientRect = this.bounds.getBoundingClientRect();
-    const elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
+    // generate the bounds dimensional information
+    let boundsBounds: ClientRect = this.bounds.getBoundingClientRect();
+    let boundsWidth: number = this.bounds.offsetWidth;
+    let boundsHeight: number = this.bounds.offsetHeight;
+    let boundsRotation: number = this.getRotationForElement(this.bounds);
+    let boundsP0: DOMPoint = new DOMPoint(
+      boundsBounds.left + (boundsBounds.width / 2),
+      boundsBounds.top + (boundsBounds.height / 2),
+    );
+
+    // generate the top left point position of the rotated bounds so we can understand it's true placement
+    let boundsTL: DOMPoint = this.getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
+
+    // we must now rotate the point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
+    boundsTL = this.rotatePoint(boundsTL, boundsP0, -boundsRotation);
+
+    // construct a rectangle that represents the position of the boundary in a normalized space
+    let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+
+    // generate the elements dimensional information
+    let elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
+    let elWidth: number = this.el.nativeElement.offsetWidth;
+    let elHeight: number = this.el.nativeElement.offsetHeight;
+    let elRotation: number = this.getTotalRotationForElement(this.el.nativeElement);
+    let elP0: DOMPoint = new DOMPoint(
+      elBounds.left + (elBounds.width / 2),
+      elBounds.top + (elBounds.height / 2),
+    );
+
+    // generate all four points of the element that we will need to check
+    let elTL: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TL);
+    let elTR: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TR);
+    let elBR: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BR);
+    let elBL: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BL);
+
+    // we must now rotate each point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
+    elTL = this.rotatePoint(elTL, boundsP0, -boundsRotation);
+    elTR = this.rotatePoint(elTR, boundsP0, -boundsRotation);
+    elBR = this.rotatePoint(elBR, boundsP0, -boundsRotation);
+    elBL = this.rotatePoint(elBL, boundsP0, -boundsRotation);
+
+    // check to see if any of the points reside outside of the bounds
+    let isTLOutside: boolean = !this.isPointInsideBounds(elTL, checkBounds);
+    let isTROutside: boolean = !this.isPointInsideBounds(elTR, checkBounds);
+    let isBROutside: boolean = !this.isPointInsideBounds(elBR, checkBounds);
+    let isBLOutside: boolean = !this.isPointInsideBounds(elBL, checkBounds);
+
+    // check each boundary line for being crossed
+    const isTopEdgeCollided: boolean = isTLOutside && elTL.y <= checkBounds.top ||
+      isTROutside && elTR.y <= checkBounds.top ||
+      isBROutside && elBR.y <= checkBounds.top ||
+      isBLOutside && elBL.y <= checkBounds.top;
+    const isRightEdgeCollided: boolean = isTLOutside && elTL.x >= (checkBounds.left + checkBounds.width) ||
+      isTROutside && elTR.x >= (checkBounds.left + checkBounds.width) ||
+      isBROutside && elBR.x >= (checkBounds.left + checkBounds.width) ||
+      isBLOutside && elBL.x >= (checkBounds.left + checkBounds.width);
+    const isBottomEdgeCollided: boolean = isTLOutside && elTL.y >= (checkBounds.top + checkBounds.height) ||
+      isTROutside && elTR.y >= (checkBounds.top + checkBounds.height) ||
+      isBROutside && elBR.y >= (checkBounds.top + checkBounds.height) ||
+      isBLOutside && elBL.y >= (checkBounds.top + checkBounds.height);
+    const isLeftEdgeCollided: boolean = isTLOutside && elTL.x <= checkBounds.left ||
+      isTROutside && elTR.x <= checkBounds.left ||
+      isBROutside && elBR.x <= checkBounds.left ||
+      isBLOutside && elBL.x <= checkBounds.left;
+
+    // clean up memory
+    elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
+    elRotation = elP0 = checkBounds = boundsBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 = null;
 
     return new NgxDraggableBoundsCheckEvent(
-      bounds.top < elBounds.top,
-      bounds.right > elBounds.right,
-      bounds.bottom > elBounds.bottom,
-      bounds.left < elBounds.left,
+      isTopEdgeCollided,
+      isRightEdgeCollided,
+      isBottomEdgeCollided,
+      isLeftEdgeCollided,
     );
+  }
+
+  /**
+   * Determines if a given point resides inside of the bounds rectangle that is also provided. This determination is
+   * calculated within a zero degree orientation coordinate space, therefore, the bounds rectangle that is provided
+   * should already be in a normalized size when provided.
+   *
+   * Also, please note that this logic will treat the one pixel edge of the bounds rectangle as being outside of the
+   * boundaries for the purpose of analyzing boundaries.
+   *
+   * @param point The point to check.
+   * @param bounds The boundaries that define where we want to check where the point resides.
+   * @return True if the point resides within the bounds.
+   */
+  private isPointInsideBounds(point: DOMPoint, bounds: ClientRect | DOMRect): boolean {
+    return (point.x > bounds.left && point.x < bounds.left + bounds.width &&
+      point.y > bounds.top && point.y < bounds.top + bounds.height);
   }
 
   /**
@@ -588,13 +683,13 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
-   * Finds the overall computed rotation of the element's parent nodes so we can get an accurate
+   * Finds the overall computed rotation of the element including parent nodes so we can get an accurate
    * reading on the visual rotation of the element so we can appropriately adjust matrix translation
    * adjustments.
    *
    * @return The overall rotation of all parent nodes.
    */
-  private getParentalRotationContext(node: HTMLElement, rotation = 0): number {
+  private getTotalRotationForElement(node: HTMLElement, rotation = 0): number {
     // if we can't calculate the computed style or we have no node to analyze, return the current calculated rotation
     if (!node || !window) {
       return rotation;
@@ -606,7 +701,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // search up the DOM tree calculating the rotation
-    return this.getParentalRotationContext(node.parentElement, rotation + this.getRotationForElement(node));
+    return this.getTotalRotationForElement(node.parentElement, rotation + this.getRotationForElement(node));
   }
 
   /**
