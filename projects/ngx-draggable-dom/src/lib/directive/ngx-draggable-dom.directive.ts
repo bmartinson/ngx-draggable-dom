@@ -1,19 +1,10 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Inject, Input, OnInit, Output, Renderer2 } from "@angular/core";
 import { NgxDraggableBoundsCheckEvent } from "../classes/ngx-draggable-bounds-check-event";
 import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
+import { isPointInsideBounds, getTransformedCoordinate, rotatePoint, ElementHandle } from "../helpers/ngx-draggable-dom-math";
+import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
 
 const MAX_SAFE_Z_INDEX = 16777271;
-
-enum ElementHandle {
-  TL = "tl",
-  TR = "tr",
-  BL = "bl",
-  BR = "br",
-  L = "ml",
-  R = "mr",
-  T = "mt",
-  B = "mb",
-}
 
 @Directive({
   selector: "[ngxDraggableDom]",
@@ -305,7 +296,7 @@ export class NgxDraggableDomDirective implements OnInit {
       let transY = this.tempTrans.y + this.oldTrans.y;
 
       // rotate the translation in the opposite direction of the computed parent rotation to normalize
-      const rotatedTranslation: DOMPoint = this.rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
+      const rotatedTranslation: DOMPoint = rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
 
       transX = rotatedTranslation.x;
       transY = rotatedTranslation.y;
@@ -358,7 +349,7 @@ export class NgxDraggableDomDirective implements OnInit {
       // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
       if (window) {
         // create the numerical matrix we will use
-        matrix = this.getTransformMatrixForElement(this.el.nativeElement);
+        matrix = getTransformMatrixForElement(this.el.nativeElement);
 
         // update the x and y values as part of the matrix
         matrix[4] = transX;
@@ -449,7 +440,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.moving = true;
 
       // compute the current rotation of all parent nodes
-      this.computedRotation = this.getTotalRotationForElement(this.el.nativeElement.parentElement);
+      this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
@@ -539,17 +530,17 @@ export class NgxDraggableDomDirective implements OnInit {
     let boundsBounds: ClientRect = this.bounds.getBoundingClientRect();
     let boundsWidth: number = this.bounds.offsetWidth;
     let boundsHeight: number = this.bounds.offsetHeight;
-    let boundsRotation: number = this.getRotationForElement(this.bounds);
+    let boundsRotation: number = getRotationForElement(this.bounds);
     let boundsP0: DOMPoint = new DOMPoint(
       boundsBounds.left + (boundsBounds.width / 2),
       boundsBounds.top + (boundsBounds.height / 2),
     );
 
     // generate the top left point position of the rotated bounds so we can understand it's true placement
-    let boundsTL: DOMPoint = this.getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
+    let boundsTL: DOMPoint = getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
 
     // we must now rotate the point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
-    boundsTL = this.rotatePoint(boundsTL, boundsP0, -boundsRotation);
+    boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
     let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
@@ -558,29 +549,29 @@ export class NgxDraggableDomDirective implements OnInit {
     let elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
     let elWidth: number = this.el.nativeElement.offsetWidth;
     let elHeight: number = this.el.nativeElement.offsetHeight;
-    let elRotation: number = this.getTotalRotationForElement(this.el.nativeElement);
+    let elRotation: number = getTotalRotationForElement(this.el.nativeElement);
     let elP0: DOMPoint = new DOMPoint(
       elBounds.left + (elBounds.width / 2),
       elBounds.top + (elBounds.height / 2),
     );
 
     // generate all four points of the element that we will need to check
-    let elTL: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TL);
-    let elTR: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TR);
-    let elBR: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BR);
-    let elBL: DOMPoint = this.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BL);
+    let elTL: DOMPoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TL);
+    let elTR: DOMPoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TR);
+    let elBR: DOMPoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BR);
+    let elBL: DOMPoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BL);
 
     // we must now rotate each point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
-    elTL = this.rotatePoint(elTL, boundsP0, -boundsRotation);
-    elTR = this.rotatePoint(elTR, boundsP0, -boundsRotation);
-    elBR = this.rotatePoint(elBR, boundsP0, -boundsRotation);
-    elBL = this.rotatePoint(elBL, boundsP0, -boundsRotation);
+    elTL = rotatePoint(elTL, boundsP0, -boundsRotation);
+    elTR = rotatePoint(elTR, boundsP0, -boundsRotation);
+    elBR = rotatePoint(elBR, boundsP0, -boundsRotation);
+    elBL = rotatePoint(elBL, boundsP0, -boundsRotation);
 
     // check to see if any of the points reside outside of the bounds
-    let isTLOutside: boolean = !this.isPointInsideBounds(elTL, checkBounds);
-    let isTROutside: boolean = !this.isPointInsideBounds(elTR, checkBounds);
-    let isBROutside: boolean = !this.isPointInsideBounds(elBR, checkBounds);
-    let isBLOutside: boolean = !this.isPointInsideBounds(elBL, checkBounds);
+    let isTLOutside: boolean = !isPointInsideBounds(elTL, checkBounds);
+    let isTROutside: boolean = !isPointInsideBounds(elTR, checkBounds);
+    let isBROutside: boolean = !isPointInsideBounds(elBR, checkBounds);
+    let isBLOutside: boolean = !isPointInsideBounds(elBL, checkBounds);
 
     // check each boundary line for being crossed
     const isTopEdgeCollided: boolean = isTLOutside && elTL.y <= checkBounds.top ||
@@ -600,9 +591,22 @@ export class NgxDraggableDomDirective implements OnInit {
       isBROutside && elBR.x <= checkBounds.left ||
       isBLOutside && elBL.x <= checkBounds.left;
 
+    // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
+    if (!!this.constrainByBounds) {
+      // calculate the constraining displacement if the element fits within the height of the bounds
+      if (elHeight < boundsHeight) {
+
+      }
+
+      // calculate the constraining displacement if the element fits within the width of the bounds
+      if (elWidth < boundsWidth) {
+
+      }
+    }
+
     // clean up memory
     elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
-    elRotation = elP0 = checkBounds = boundsBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 = null;
+      elRotation = elP0 = checkBounds = boundsBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 = null;
 
     return new NgxDraggableBoundsCheckEvent(
       isTopEdgeCollided,
@@ -610,165 +614,6 @@ export class NgxDraggableDomDirective implements OnInit {
       isBottomEdgeCollided,
       isLeftEdgeCollided,
     );
-  }
-
-  /**
-   * Determines if a given point resides inside of the bounds rectangle that is also provided. This determination is
-   * calculated within a zero degree orientation coordinate space, therefore, the bounds rectangle that is provided
-   * should already be in a normalized size when provided.
-   *
-   * Also, please note that this logic will treat the one pixel edge of the bounds rectangle as being outside of the
-   * boundaries for the purpose of analyzing boundaries.
-   *
-   * @param point The point to check.
-   * @param bounds The boundaries that define where we want to check where the point resides.
-   * @return True if the point resides within the bounds.
-   */
-  private isPointInsideBounds(point: DOMPoint, bounds: ClientRect | DOMRect): boolean {
-    return (point.x > bounds.left && point.x < bounds.left + bounds.width &&
-      point.y > bounds.top && point.y < bounds.top + bounds.height);
-  }
-
-  /**
-   * Calculates the computed transform matrix for a given element.
-   *
-   * @param el The html element that we want to find the computed transform matrix for.
-   * @return The computed transform matrix as an array of numbers.
-   */
-  private getTransformMatrixForElement(el: HTMLElement): number[] {
-    // create the numerical matrix we will use
-    const matrix: number[] = [1, 0, 0, 1, 0, 0];
-
-    if (window) {
-      // get the computed transform style
-      let transform = window.getComputedStyle(
-        el,
-        null,
-      ).getPropertyValue("transform");
-
-      // strip non matrix values from the string
-      transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
-
-      // if we have a transform set, convert the string matrix to a numerical one
-      if (transform !== "none") {
-        // split the string based on commas
-        let transformMatrix: string[] = transform.split(",");
-
-        // convert the values of the matrix to numbers and add to our numerical matrix
-        for (let i = 0; i < transformMatrix.length; i++) {
-          matrix[i] = +transformMatrix[i];
-        }
-        transformMatrix = null;
-      }
-    }
-
-    return matrix;
-  }
-
-  /**
-   * Calculates the current rotation (in degrees) for a given HTMLElement using the computed transform style.
-   *
-   * @param el The HTMLElement to find the current rotation for.
-   */
-  private getRotationForElement(el: HTMLElement): number {
-    if (!el) {
-      return 0;
-    }
-
-    // get the computed transform style matrix
-    const matrix: number[] = this.getTransformMatrixForElement(el);
-
-    // calculate the rotation in degrees based on the transform matrix
-    return (Math.acos(matrix[0]) * 180) / Math.PI;
-  }
-
-  /**
-   * Finds the overall computed rotation of the element including parent nodes so we can get an accurate
-   * reading on the visual rotation of the element so we can appropriately adjust matrix translation
-   * adjustments.
-   *
-   * @return The overall rotation of all parent nodes.
-   */
-  private getTotalRotationForElement(node: HTMLElement, rotation = 0): number {
-    // if we can't calculate the computed style or we have no node to analyze, return the current calculated rotation
-    if (!node || !window) {
-      return rotation;
-    }
-
-    // if we have reached the body, stop processing beyond here
-    if (node.nodeName === "BODY") {
-      return rotation + this.getRotationForElement(node);
-    }
-
-    // search up the DOM tree calculating the rotation
-    return this.getTotalRotationForElement(node.parentElement, rotation + this.getRotationForElement(node));
-  }
-
-  /**
-   * Rotates a given DOMPoint around another pivot DOMPoint.
-   *
-   * @param point The point to be rotated.
-   * @param pivot The pivot point that we are rotating the DOMPoint, point, around.
-   * @param angle The angle at which we want to rotate the DOMPoint, point, around the pivot point.
-   */
-  private rotatePoint(point: DOMPoint, pivot: DOMPoint, angle: number): DOMPoint {
-    const radians: number = angle * (Math.PI / 180);
-    const rotatedX: number = Math.cos(radians) * (point.x - pivot.x) - Math.sin(radians) * (point.y - pivot.y) + pivot.x;
-    const rotatedY: number = Math.sin(radians) * (point.x - pivot.x) + Math.cos(radians) * (point.y - pivot.y) + pivot.y;
-
-    return new DOMPoint(rotatedX, rotatedY);
-  }
-
-  /**
-   * Find the coordinate point of the bounding box as defined by w and h and rotated by rotation degrees around point p0.
-   *
-   * @param p0 The center point of origin we are rotating around.
-   * @param w The width of the bounding box we are calculating.
-   * @param h The height of the bounding box we are calculating.
-   * @param rotation The degrees of rotation being applied to the box.
-   * @param coordinate The coordinate you would like "tl", "t", "tr", "r", "br", "b", "bl", "l"
-   * @return The requested point.
-   */
-  private getTransformedCoordinate(
-    p0: DOMPoint,
-    w: number,
-    h: number,
-    rotation: number,
-    coordinate: ElementHandle = ElementHandle.TL,
-  ): DOMPoint {
-    let newP: DOMPoint = new DOMPoint(p0.x - (w / 2), p0.y - (h / 2));
-
-    let p: DOMPoint;
-    if (coordinate === ElementHandle.TL) {
-      p = new DOMPoint(newP.x, newP.y);
-    } else if (coordinate === ElementHandle.TR) {
-      p = new DOMPoint(newP.x + w, newP.y);
-    } else if (coordinate === ElementHandle.BL) {
-      p = new DOMPoint(newP.x, newP.y + h);
-    } else if (coordinate === ElementHandle.BR) {
-      p = new DOMPoint(newP.x + w, newP.y + h);
-    } else if (coordinate === ElementHandle.L) {
-      p = new DOMPoint(newP.x, newP.y + (h / 2));
-    } else if (coordinate === ElementHandle.R) {
-      p = new DOMPoint(newP.x + w, newP.y + (h / 2));
-    } else if (coordinate === ElementHandle.T) {
-      p = new DOMPoint(newP.x + (w / 2), newP.y);
-    } else if (coordinate === ElementHandle.B) {
-      p = new DOMPoint(newP.x + (w / 2), newP.y + h);
-    } else {
-      return null;
-    }
-
-    const theta: number = rotation * Math.PI / 180;
-
-    // calculate the new coordinate point with rotation applied
-    const p0p = new DOMPoint(newP.x + (w / 2), newP.y + (h / 2));
-    newP = new DOMPoint(
-      ((p.x - p0p.x) * Math.cos(theta)) - ((p.y - p0p.y) * Math.sin(theta)) + p0p.x,
-      ((p.x - p0p.x) * Math.sin(theta)) + ((p.y - p0p.y) * Math.cos(theta)) + p0p.y,
-    );
-
-    return newP;
   }
 
 }
