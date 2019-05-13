@@ -52,7 +52,7 @@ export function getRotationForElement(el: HTMLElement): number {
   const matrix: number[] = getTransformMatrixForElement(el);
 
   // calculate the rotation in degrees based on the transform matrix
-  return (Math.acos(matrix[0]) * 180) / Math.PI;
+  return (Math.asin(matrix[1]) * 180) / Math.PI;
 }
 
 /**

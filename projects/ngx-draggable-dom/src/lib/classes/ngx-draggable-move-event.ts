@@ -25,6 +25,12 @@ export class NgxDraggableMoveEvent {
     return this._position;
   }
 
+  /**
+   * Constructs the move event with specified property values.
+   *
+   * @param target The target HTMLElement that was moved.
+   * @param position The position of the target HTMLElement.
+   */
   constructor(target: HTMLElement, position: DOMPoint) {
     if (!!target) {
       this._target = target;
