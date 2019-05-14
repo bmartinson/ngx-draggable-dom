@@ -1,10 +1,14 @@
 import { NgModule } from "@angular/core";
-import { NgxDraggableDomDirective } from "./ngx-draggable-dom.directive";
+import { NgxDraggableDomDirective } from "./directive/ngx-draggable-dom.directive";
 
 @NgModule({
-  declarations: [NgxDraggableDomDirective],
+  declarations: [
+    NgxDraggableDomDirective,
+  ],
   imports: [
   ],
-  exports: [NgxDraggableDomDirective]
+  exports: [
+    NgxDraggableDomDirective,
+  ]
 })
 export class NgxDraggableDomModule { }

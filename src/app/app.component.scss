@@ -1,0 +1,45 @@
+img {
+  border: 1px dashed #cccccc;
+}
+
+.ngx-dd-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ngx-dd-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+
+  .ngx-dd-bounds {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px dashed black;
+    width: 600px;
+    height: 600px;
+    // transform: rotate(45deg);
+
+    img {
+      // transform: rotate(45deg);
+    }
+  }
+
+  &#ngx-dd-custom-style-example {
+    // custom override for cursor styling examples
+    .ngx-draggable {
+        cursor: grab;
+    }
+
+    // custom override for cursor styling examples
+    .ngx-dragging {
+        cursor: grabbing;
+    }
+  }
+}
