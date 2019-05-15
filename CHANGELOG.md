@@ -1,5 +1,23 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.1.0"></a>
+## [1.1.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.2...:1.1.0) (2019-05-15)
+
+#### Overview
++ This update introduces a major re-working of the library, including breaking changes from the previous version, in order to fix a handful of issues. It also introduces an example playground as the wrapper project that you can use to test the library and explore its features.
+
+#### Enhancements
++ Wrapper project is now a working Angular project that presents a sample playground for testing the directive.
+
+#### Bug Fixes
++ The directive can now be used on unlimited elements in the DOM, where previously incorrect event host bindings led to only one element being able to properly use the directive.
++ Transformations that are not translations are maintained while dragging.
++ The directive can now be used on elements that have a rotation applied to them.
++ The directive can now be used on elements that have parent nodes that have rotation transformations applied to them.
++ CSS classes that are autmoatially injected and removed from the element using the directive have a new name `ngx-draggable` and `ngx-dragging`.
++ A new SCSS style is included as part of the library that gives default cursor styling and prevents the element using the directive from looking highlighted in the page.
++ Events and bounds data no longer are generic objects that adhere to interfaces. All custom interfaces have been removed and strongly typed class objects are now used for events.
+
 <a name="1.0.2"></a>
 ## [1.0.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.1...bmartinson:1.0.2) (2019-05-02)
 
