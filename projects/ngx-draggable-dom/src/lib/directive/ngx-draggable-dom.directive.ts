@@ -368,8 +368,8 @@ export class NgxDraggableDomDirective implements OnInit {
         if (!!boundsCenter) {
           // check the bounds based on the element position
           boundsCheck = this.boundsCheck(new DOMPoint(
-            boundsCenter.x + transX + this.clientMoving.x,
-            boundsCenter.y + transY + this.clientMoving.y,
+            boundsCenter.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
+            boundsCenter.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
           ));
 
           // hold the element in position if we are requested to be constrained
@@ -713,13 +713,10 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // displace the normalized element center
-    let constrainedElP0: DOMPoint = new DOMPoint(
+    const constrainedElP0: DOMPoint = new DOMPoint(
       normalizedElP0.x + ((displaceX !== undefined) ? displaceX : 0),
       normalizedElP0.y + ((displaceY !== undefined) ? displaceY : 0),
     );
-
-    // undo the normalization of the element center
-    constrainedElP0 = rotatePoint(constrainedElP0, boundsP0, boundsRotation);
 
     // clean up memory
     elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
