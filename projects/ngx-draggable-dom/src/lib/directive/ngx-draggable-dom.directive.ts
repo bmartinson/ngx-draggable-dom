@@ -338,7 +338,6 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   private moveTo(x: number, y: number): void {
     let boundsCheck: NgxDraggableBoundsCheckEvent;
-    let elCenter: DOMPoint;
     let boundsCenter: DOMPoint;
     let matrix: number[];
     let transform: string;
@@ -360,22 +359,34 @@ export class NgxDraggableDomDirective implements OnInit {
       // make sure the constrained tracking variables are cleared
       this.constrainedX = this.constrainedY = false;
 
-      // check the bounds
-      boundsCheck = this.boundsCheck(this.clientMoving.x, this.clientMoving.y);
-
-      // if the bounds were checked and we are set to constrain, adjust the positioning of the element to hold it
-      if (this.constrainByBounds && boundsCheck && (boundsCheck.isConstrainedX || boundsCheck.isConstrainedY)) {
-        elCenter = this.elCenter;
+      // if the element is to be constrained by the bounds, we must check the bounds for the element
+      if (this.constrainByBounds) {
+        // get the bounds center point for positioning information
         boundsCenter = this.boundsCenter;
 
-        if (boundsCheck.isConstrainedX) {
-          this.tempTrans.x = transX = boundsCheck.constrainedCenter.x - (this.boundsCenter.x);
-          this.constrainedX = true;
-        }
+        // check the bounds if we have access to the center point
+        if (!!boundsCenter) {
+          // check the bounds based on the element position
+          boundsCheck = this.boundsCheck(boundsCenter.x + transX + this.clientMoving.x, boundsCenter.y + transY + this.clientMoving.y);
 
-        if (boundsCheck.isConstrainedY) {
-          this.tempTrans.y = transY = boundsCheck.constrainedCenter.y - (this.boundsCenter.y);
-          this.constrainedY = true;
+          // hold the element in position if we are requested to be constrained
+          if (boundsCheck && boundsCheck.isConstrained) {
+            // update the translation using the constrained center point and bounds center
+            transX = boundsCheck.constrainedCenter.x - boundsCenter.x;
+            transY = boundsCheck.constrainedCenter.y - boundsCenter.y;
+
+            // track whether we constrained or not
+            this.constrainedX = this.curTrans.x === transX;
+            this.constrainedY = this.curTrans.y === transY;
+
+            // if we constrained in one of the directions, update that direction's tempTrans value for putBack
+            if (this.constrainedX) {
+              this.tempTrans.x = transX;
+            }
+            if (this.constrainedY) {
+              this.tempTrans.y = transY;
+            }
+          }
         }
       }
 
@@ -421,7 +432,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // clean up memory
-    boundsCheck = matrix = transform = elCenter = boundsCenter = null;
+    boundsCheck = matrix = transform = boundsCenter = null;
   }
 
   /**
@@ -498,9 +509,17 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
       if (this.bounds) {
-        const boundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(0, 0);
-        if (boundsCheck) {
-          this.edge.emit(boundsCheck);
+        // get the current center point of the element
+        const elCenter: DOMPoint = this.elCenter;
+
+        if (!!elCenter) {
+          // check the bounds based on the element position
+          const boundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(elCenter.x, elCenter.y);
+
+          // emit the edge event so consumers know the current state of the position
+          if (!!boundsCheck) {
+            this.edge.emit(boundsCheck);
+          }
         }
       }
 
@@ -540,8 +559,8 @@ export class NgxDraggableDomDirective implements OnInit {
    * Uses the defined boundary element and checks for an intersection with the draggable element to determine
    * if any edge has collided with one another.
    *
-   * @param x The projected x translation of the element.
-   * @param y The projected y translation of the element.
+   * @param x The x position of the element center.
+   * @param y The y position of the element center.
    * @return A NgxDraggableBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
    */
   private boundsCheck(x: number, y: number): NgxDraggableBoundsCheckEvent | null {
@@ -576,10 +595,7 @@ export class NgxDraggableDomDirective implements OnInit {
     let elWidth: number = this.elWidth;
     let elHeight: number = this.elHeight;
     let elRotation: number = getTotalRotationForElement(this.el.nativeElement);
-    let elP0: DOMPoint = new DOMPoint(
-      elBounds.left + (elBounds.width / 2) + x,
-      elBounds.top + (elBounds.height / 2) + y,
-    );
+    let elP0: DOMPoint = new DOMPoint(x, y);
     let normalizedElP0: DOMPoint = rotatePoint(elP0, boundsP0, -boundsRotation);
 
     // generate all four points of the element that we will need to check
@@ -619,55 +635,96 @@ export class NgxDraggableDomDirective implements OnInit {
       isBLOutside && elBL.x <= checkBounds.left;
 
     // define variables to store the displacement of the element to constrain it within the bounds
-    let displaceX = 0;
-    let displaceY = 0;
-    let isDisplacingX = false;
-    let isDisplacingY = false;
+    let displaceX;
+    let displaceY;
+    let constrainPoint: DOMPoint;
 
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
     if (!!this.constrainByBounds && isTopEdgeCollided || isRightEdgeCollided || isBottomEdgeCollided || isLeftEdgeCollided) {
-      // get the bounding box for the normalized element
-      normalizedElBounds = getBoundingBox(normalizedElP0, elWidth, elHeight, elRotation);
-
       // get the bounding box for the normalized boundaries
       normalizedBoundsBounds = getBoundingBox(boundsP0, boundsWidth, boundsHeight, 0);
 
       // calculate the constraining displacement if the element fits within the width of the bounds
       if (elWidth < boundsWidth) {
-        isDisplacingX = true;
-        if (normalizedBoundsBounds.left >= normalizedElBounds.left) {
-          // the element is off to the left so we must displace back right
-          displaceX = normalizedBoundsBounds.left - normalizedElBounds.left;
-        } else if (normalizedBoundsBounds.left + normalizedBoundsBounds.width <= normalizedElBounds.left + normalizedElBounds.width) {
-          // the element is off to the right so we must displace back left
-          displaceX = (normalizedBoundsBounds.left + normalizedBoundsBounds.width) - (normalizedElBounds.left + normalizedElBounds.width);
+        if (isRightEdgeCollided) {
+          // determine which collision point we're going to constrain with
+          if (isTLOutside && elTL.x >= (checkBounds.left + checkBounds.width)) {
+            constrainPoint = new DOMPoint(elTL.x, elTL.y);
+          } else if (isTROutside && elTR.x >= (checkBounds.left + checkBounds.width)) {
+            constrainPoint = new DOMPoint(elTR.x, elTR.y);
+          } else if (isBROutside && elBR.x >= (checkBounds.left + checkBounds.width)) {
+            constrainPoint = new DOMPoint(elBR.x, elBR.y);
+          } else if (isBLOutside && elBL.x >= (checkBounds.left + checkBounds.width)) {
+            constrainPoint = new DOMPoint(elBL.x, elBL.y);
+          }
+
+          // calculate the displacement
+          displaceX = checkBounds.x + checkBounds.width - constrainPoint.x;
+        } else if (isLeftEdgeCollided) {
+          // determine which collision point we're going to constrain with
+          if (isTLOutside && elTL.x <= checkBounds.left) {
+            constrainPoint = new DOMPoint(elTL.x, elTL.y);
+          } else if (isTROutside && elTR.x <= checkBounds.left) {
+            constrainPoint = new DOMPoint(elTR.x, elTR.y);
+          } else if (isBROutside && elBR.x <= checkBounds.left) {
+            constrainPoint = new DOMPoint(elBR.x, elBR.y);
+          } else if (isBLOutside && elBL.x <= checkBounds.left) {
+            constrainPoint = new DOMPoint(elBL.x, elBL.y);
+          }
+
+          // calculate the displacement
+          displaceX = checkBounds.x - constrainPoint.x;
         }
       }
 
       // calculate the constraining displacement if the element fits within the height of the bounds
       if (elHeight < boundsHeight) {
-        isDisplacingY = true;
+        if (isBottomEdgeCollided) {
+          // determine which collision point we're going to constrain with
+          if (isTLOutside && elTL.y >= (checkBounds.top + checkBounds.height)) {
+            constrainPoint = new DOMPoint(elTL.x, elTL.y);
+          } else if (isTROutside && elTR.y >= (checkBounds.top + checkBounds.height)) {
+            constrainPoint = new DOMPoint(elTR.x, elTR.y);
+          } else if (isBROutside && elBR.y >= (checkBounds.top + checkBounds.height)) {
+            constrainPoint = new DOMPoint(elBR.x, elBR.y);
+          } else if (isBLOutside && elBL.y >= (checkBounds.top + checkBounds.height)) {
+            constrainPoint = new DOMPoint(elBL.x, elBL.y);
+          }
 
-        if (normalizedBoundsBounds.top >= normalizedElBounds.top) {
-          // the element is off to the top so we must displace back down
-          displaceY = normalizedBoundsBounds.top - normalizedElBounds.top;
-        } else if (normalizedBoundsBounds.top + normalizedBoundsBounds.height <= normalizedElBounds.top + normalizedElBounds.height) {
-          // the element is off to the bottom so we must displace back up
-          displaceY = (normalizedBoundsBounds.top + normalizedBoundsBounds.height) - (normalizedElBounds.top + normalizedElBounds.height);
+          // calculate the displacement
+          displaceY = checkBounds.y + checkBounds.height - constrainPoint.y;
+        } else if (isTopEdgeCollided) {
+          // determine which collision point we're going to constrain with
+          if (isTLOutside && elTL.y <= checkBounds.top) {
+            constrainPoint = new DOMPoint(elTL.x, elTL.y);
+          } else if (isTROutside && elTR.y <= checkBounds.top) {
+            constrainPoint = new DOMPoint(elTR.x, elTR.y);
+          } else if (isBROutside && elBR.y <= checkBounds.top) {
+            constrainPoint = new DOMPoint(elBR.x, elBR.y);
+          } else if (isBLOutside && elBL.y <= checkBounds.top) {
+            constrainPoint = new DOMPoint(elBL.x, elBL.y);
+          }
+
+          // calculate the displacement
+          displaceY = checkBounds.y - constrainPoint.y;
         }
       }
     }
 
-    // displace the normalized center point of the element
-    let constrainedElP0: DOMPoint = new DOMPoint(normalizedElP0.x + displaceX, normalizedElP0.y + displaceY);
+    // displace the normalized element center
+    let constrainedElP0: DOMPoint = new DOMPoint(
+      normalizedElP0.x + ((displaceX !== undefined) ? displaceX : 0),
+      normalizedElP0.y + ((displaceY !== undefined) ? displaceY : 0),
+    );
 
-    // rotate the constrained and normalized point back by the bounds rotation so we find its true placement
+    // undo the normalization of the element center
     constrainedElP0 = rotatePoint(constrainedElP0, boundsP0, boundsRotation);
+    console.log("constrainedElP0", constrainedElP0);
 
     // clean up memory
     elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
       elRotation = elP0 = checkBounds = boundsBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
-      normalizedElBounds = normalizedElP0 = normalizedBoundsBounds = null;
+      normalizedElBounds = normalizedElP0 = normalizedBoundsBounds = constrainPoint = null;
 
     return new NgxDraggableBoundsCheckEvent(
       isTopEdgeCollided,
@@ -675,8 +732,7 @@ export class NgxDraggableDomDirective implements OnInit {
       isBottomEdgeCollided,
       isLeftEdgeCollided,
       constrainedElP0,
-      isDisplacingX,
-      isDisplacingY,
+      displaceX !== undefined || displaceY !== undefined,
     );
   }
 

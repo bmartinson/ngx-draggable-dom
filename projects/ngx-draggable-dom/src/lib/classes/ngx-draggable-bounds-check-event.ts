@@ -9,8 +9,7 @@ export class NgxDraggableBoundsCheckEvent {
   public readonly bottom: boolean;
   public readonly left: boolean;
   public readonly constrainedCenter: DOMPoint | undefined;
-  public readonly isConstrainedX: boolean;
-  public readonly isConstrainedY: boolean;
+  public readonly isConstrained: boolean;
 
   /**
    * Read only property that indicates if one or more of the boundaries have been collided with.
@@ -29,8 +28,7 @@ export class NgxDraggableBoundsCheckEvent {
    * @param bottom Whether the bottom edge has been breached or not.
    * @param left Whether the left edge has been breached or not.
    * @param elP0 The center point of the element if it were to be constrained by these bounds.
-   * @param isConstrainedX Whether the element should be constrained in the X direction or not..
-   * @param isConstrainedY Whether the element should be constrained din the Y direction or not.
+   * @param isConstrained Whether the element should be constrained or not.
    */
   constructor(
     top: boolean,
@@ -38,8 +36,7 @@ export class NgxDraggableBoundsCheckEvent {
     bottom: boolean,
     left: boolean,
     elP0: DOMPoint,
-    isConstrainedX: boolean,
-    isConstrainedY: boolean,
+    isConstrained: boolean,
   ) {
     this.top = (!!top) ? top : false;
     this.right = (!!right) ? right : false;
@@ -48,8 +45,7 @@ export class NgxDraggableBoundsCheckEvent {
     if (!!elP0) {
       this.constrainedCenter = elP0;
     }
-    this.isConstrainedX = (!!isConstrainedX) ? isConstrainedX : false;
-    this.isConstrainedY = (!!isConstrainedY) ? isConstrainedY : false;
+    this.isConstrained = (!!isConstrained) ? isConstrained : false;
   }
 
 }
