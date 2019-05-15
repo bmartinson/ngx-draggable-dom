@@ -24,10 +24,19 @@ img {
     border: 1px dashed black;
     width: 600px;
     height: 600px;
+  }
+
+  .ngx-dd-bounds-rotated {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px dashed black;
+    width: 600px;
+    height: 600px;
     transform: rotate(35deg);
 
     img {
-      // transform: rotate(30deg);
+      transform: rotate(30deg);
     }
   }
 
