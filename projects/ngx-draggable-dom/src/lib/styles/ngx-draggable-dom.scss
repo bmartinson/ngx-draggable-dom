@@ -1,3 +1,19 @@
+.ngx-draggable::selection {
+  background: transparent;
+}
+
+.ngx-draggable::-moz-selection {
+  background: transparent;
+}
+
+.ngx-dragging::selection {
+  background: transparent;
+}
+
+.ngx-dragging::-moz-selection {
+  background: transparent;
+}
+
 .ngx-draggable {
   cursor: move;
 }
