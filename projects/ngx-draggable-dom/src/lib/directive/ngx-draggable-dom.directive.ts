@@ -719,7 +719,6 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // undo the normalization of the element center
     constrainedElP0 = rotatePoint(constrainedElP0, boundsP0, boundsRotation);
-    console.log("constrainedElP0", constrainedElP0);
 
     // clean up memory
     elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
