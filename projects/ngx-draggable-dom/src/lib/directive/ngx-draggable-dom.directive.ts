@@ -367,7 +367,10 @@ export class NgxDraggableDomDirective implements OnInit {
         // check the bounds if we have access to the center point
         if (!!boundsCenter) {
           // check the bounds based on the element position
-          boundsCheck = this.boundsCheck(boundsCenter.x + transX + this.clientMoving.x, boundsCenter.y + transY + this.clientMoving.y);
+          boundsCheck = this.boundsCheck(new DOMPoint(
+            boundsCenter.x + transX + this.clientMoving.x,
+            boundsCenter.y + transY + this.clientMoving.y,
+          ));
 
           // hold the element in position if we are requested to be constrained
           if (boundsCheck && boundsCheck.isConstrained) {
@@ -514,7 +517,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
         if (!!elCenter) {
           // check the bounds based on the element position
-          const boundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(elCenter.x, elCenter.y);
+          const boundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(elCenter);
 
           // emit the edge event so consumers know the current state of the position
           if (!!boundsCheck) {
@@ -559,11 +562,10 @@ export class NgxDraggableDomDirective implements OnInit {
    * Uses the defined boundary element and checks for an intersection with the draggable element to determine
    * if any edge has collided with one another.
    *
-   * @param x The x position of the element center.
-   * @param y The y position of the element center.
+   * @param elP0 The center point of the element position that boundaries should be checked on.
    * @return A NgxDraggableBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
    */
-  private boundsCheck(x: number, y: number): NgxDraggableBoundsCheckEvent | null {
+  private boundsCheck(elP0: DOMPoint): NgxDraggableBoundsCheckEvent | null {
     // don"t perform the bounds checking if the user has not requested it
     if (!this.bounds) {
       return null;
@@ -595,7 +597,6 @@ export class NgxDraggableDomDirective implements OnInit {
     let elWidth: number = this.elWidth;
     let elHeight: number = this.elHeight;
     let elRotation: number = getTotalRotationForElement(this.el.nativeElement);
-    let elP0: DOMPoint = new DOMPoint(x, y);
     let normalizedElP0: DOMPoint = rotatePoint(elP0, boundsP0, -boundsRotation);
 
     // generate all four points of the element that we will need to check
