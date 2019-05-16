@@ -133,9 +133,39 @@ export class NgxDraggableDomDirective implements OnInit {
     const elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
 
     return new DOMPoint(
-      elBounds.left + (elBounds.width / 2),
-      elBounds.top + (elBounds.height / 2),
+      this.scrollLeft + elBounds.left + (elBounds.width / 2),
+      this.scrollTop + elBounds.top + (elBounds.height / 2),
     );
+  }
+
+  /**
+   * Read only property that calculates the left scroll position of the document.
+   *
+   * @return The current scroll position of the document in the x direction.
+   */
+  private get scrollLeft(): number {
+    if (!!window) {
+      return window.pageXOffset;
+    } else if (!!document && !!document.documentElement) {
+      return document.documentElement.scrollLeft;
+    } else {
+      return 0;
+    }
+  }
+
+  /**
+   * Read only property that calculates the top scroll position of the document.
+   *
+   * @return The current scroll position of the document in the y direction.
+   */
+  private get scrollTop(): number {
+    if (!!window) {
+      return window.pageYOffset;
+    } else if (!!document && !!document.documentElement) {
+      return document.documentElement.scrollTop;
+    } else {
+      return 0;
+    }
   }
 
   constructor(
@@ -166,9 +196,6 @@ export class NgxDraggableDomDirective implements OnInit {
   public ngOnInit(): void {
     if (this.allowDrag) {
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-draggable");
-
-      // set the start position
-      this.startPosition = this.elCenter;
 
       // update the view
       this.ngDetectChanges();
@@ -495,6 +522,11 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if we are not moving yet, emit the event to signal moving is beginning and start moving
     if (!this.moving) {
+      // set the start position
+      this.startPosition = this.elCenter;
+      this.startPosition.x -= this.curTrans.x;
+      this.startPosition.y -= this.curTrans.y;
+
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
 
@@ -595,6 +627,8 @@ export class NgxDraggableDomDirective implements OnInit {
       return null;
     }
 
+
+
     // generate the bounds dimensional information
     let normalizedBoundsBounds: DOMRect;
     let boundsBounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
@@ -602,8 +636,8 @@ export class NgxDraggableDomDirective implements OnInit {
     let boundsHeight: number = this.bounds.offsetHeight;
     let boundsRotation: number = getRotationForElement(this.bounds);
     let boundsP0: DOMPoint = new DOMPoint(
-      boundsBounds.left + (boundsBounds.width / 2),
-      boundsBounds.top + (boundsBounds.height / 2),
+      this.scrollLeft + boundsBounds.left + (boundsBounds.width / 2),
+      this.scrollTop + boundsBounds.top + (boundsBounds.height / 2),
     );
 
     // generate the top left point position of the rotated bounds so we can understand it's true placement
