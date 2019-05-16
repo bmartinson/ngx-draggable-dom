@@ -1,4 +1,4 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Inject, Input, OnInit, Output, Renderer2 } from "@angular/core";
+import { Directive, ElementRef, EventEmitter, HostListener, Inject, Input, OnInit, Output, Renderer2, ChangeDetectorRef, ViewRef } from "@angular/core";
 import { NgxDraggableBoundsCheckEvent } from "../classes/ngx-draggable-bounds-check-event";
 import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
 import {
@@ -52,17 +52,22 @@ export class NgxDraggableDomDirective implements OnInit {
       enabled = true;
     }
 
-    // allow dragging if we are enabled
-    this.allowDrag = !!enabled;
+    if (this.allowDrag !== !!enabled) {
+      // update the draggable state
+      this.allowDrag = !!enabled;
 
-    // get the element that will be used to make the element draggable
-    const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
+      // get the element that will be used to make the element draggable
+      const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
 
-    // if we are allowed to drag, provide the draggable class, otherwise remove it
-    if (this.allowDrag) {
-      this.renderer.addClass(draggableControl, "ngx-draggable");
-    } else {
-      this.renderer.removeClass(draggableControl, "ngx-draggable");
+      // if we are allowed to drag, provide the draggable class, otherwise remove it
+      if (this.allowDrag) {
+        this.renderer.addClass(draggableControl, "ngx-draggable");
+      } else {
+        this.renderer.removeClass(draggableControl, "ngx-draggable");
+      }
+
+      // update the view
+      this.ngDetectChanges();
     }
   }
 
@@ -139,7 +144,11 @@ export class NgxDraggableDomDirective implements OnInit {
     );
   }
 
-  constructor(@Inject(ElementRef) private el: ElementRef, @Inject(Renderer2) private renderer: Renderer2) {
+  constructor(
+    @Inject(ElementRef) private el: ElementRef,
+    @Inject(Renderer2) private renderer: Renderer2,
+    @Inject(ChangeDetectorRef) private changeRef: ChangeDetectorRef,
+  ) {
     this.started = new EventEmitter<NgxDraggableMoveEvent>();
     this.stopped = new EventEmitter<NgxDraggableMoveEvent>();
     this.moved = new EventEmitter<NgxDraggableMoveEvent>();
@@ -162,6 +171,18 @@ export class NgxDraggableDomDirective implements OnInit {
   public ngOnInit(): void {
     if (this.allowDrag) {
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-draggable");
+
+      // update the view
+      this.ngDetectChanges();
+    }
+  }
+
+  /**
+   * Invoked the Angular change detector to ensure that changes to the element's styling are reflected in the view.
+   */
+  private ngDetectChanges(): void {
+    if (this.changeRef && !(this.changeRef as ViewRef).destroyed) {
+      this.changeRef.detectChanges();
     }
   }
 
@@ -328,6 +349,9 @@ export class NgxDraggableDomDirective implements OnInit {
     this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
     this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
     this.renderer.removeStyle(this.el.nativeElement, "transform");
+
+    // update the view
+    this.ngDetectChanges();
   }
 
   /**
@@ -432,6 +456,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // emit the current translation
       this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
+
+      // update the view
+      this.ngDetectChanges();
     }
 
     // clean up memory
@@ -489,6 +516,9 @@ export class NgxDraggableDomDirective implements OnInit {
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
     }
+
+    // update the view
+    this.ngDetectChanges();
 
     // clean up memory
     position = null;
@@ -556,6 +586,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // reset the calculated rotation in case something changes when we're not dragging
     this.computedRotation = 0;
+
+    // update the view
+    this.ngDetectChanges();
   }
 
   /**
