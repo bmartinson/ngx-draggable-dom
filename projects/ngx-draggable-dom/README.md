@@ -15,23 +15,17 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2019.05.15:
++ Version 1.1.0 has been released that fixes a number of issues with the library, most importantly allowing the directive to operate on an unlimited number of elements in the DOM and in varying rotated contexts.
+
 ### 2019.05.02:
 + Updated to use the latest node packages to resolve vulnerability issues with dev dependencies.
-
-### 2019.02.15:
-+ Added the automatic addition and removal of the `ng-dragging` class while the user is interacting with the element.
-
-### 2019.02.14:
-+ Updated the project to use the latest Angular 7 tools.
-
-### 2019.02.13:
-+ Released the first release candidate for the Ng7 supported directive.
 
 ## Installation
 ```npm install ngx-draggable-dom --save```
 
 ## Usage
-1. Import `NgxDraggableDomModule` in your app module (or other proper angular module) and place it in your imports section:
+1. Import `NgxDraggableDomModule` in your app module (or other Angular module) and place it in your imports section:
 
     ```typescript
     import { NgxDraggableDomModule } from "NgxDraggableDomLibrary";
@@ -49,49 +43,74 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 2. Use the `ngxDraggableDom` directive to make a DOM element draggable.
 
 	```html
-	<div ngxDraggableDom>Drag me!</div>
+	<div ngxDraggableDom="true">Drag me!</div>
 	```
 
-3. Explore the API of inputs and outputs to help make your element drag just the way you would like!
+3. Import `ngx-draggable-dom.scss` to your application's styles or add it to your `angular.json` if you use the CLI tools.
+
+4. Explore the API of inputs and outputs to help make your element drag just the way you would like, or run the wrapper project to test it out with some pre-designed examples!
 
 ## API
 
 ### Input Properties
 
 `ngxDraggableDom` {boolean}
-+ `true`: the element can be dragged.
-+ `false`: the element cannot be dragged.
++ `true`: The element can be dragged.
++ `false`: The element cannot be dragged.
 
 `handle` {HTMLElement}
-+ `{HTMLElement}`: The element that should be used as the selectable region to drag.
++ The element that should be used as the selectable region to drag.
 
 `bounds` {HTMLElement}
-+ `{HTMLElement}`: The element that represents the region the entire draggable element should be kept within. Note, by setting this property you are not forcing it to be constrained within the bounds.
++ The element that represents the region the entire draggable element should be kept within. Note, by setting this property you are not forcing it to be constrained within the bounds.
 
 `constrainByBounds` {boolean}
-+ `true`: if `bounds` is set, the draggable element will be constrained by that HTMLElement.
-+ `false` (default): if `bounds` is set, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
++ `true`: If `bounds` is set, the draggable element will be constrained by that HTMLElement.
++ `false` (default): If `bounds` is set, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
 
 ### Output Emitters
 
-`started` {target: nativeElement, position: IPosition} as {IMoveEvent} (exported interface):
-+ Emits the nativeElement that is being dragged in `$event.target`.
-+ Emits the current translation in `$event.position` as an `IPosition {x, y}`.
+#### `started` {NgxDraggableMoveEvent}
 
-`stopped` {target: nativeElement, position: IPosition} as {IMoveEvent} (exported interface):
-+ Emits the nativeElement that is being dragged in `$event.target`.
-+ Emits the current translation in `$event.position` as an `IPosition {x, y}`.
+This event is fired when an end user starts dragging the element.
 
-`moved` {target: nativeElement, position: IPosition} as {IMoveEvent} (exported interface):
-+ Emits the nativeElement that is being dragged in `$event.target`.
-+ Emits the current translation in `$event.position` as an `IPosition {x, y}`.
+#### `stopped` {NgxDraggableMoveEvent}
 
-`edge` {top: boolean, right: boolean, bottom: boolean, left: boolean} as IBounds (exported interface):
-+ If `bounds` is set, this output will emit an object defining the state of constraint for each edge of the HTMLElement defined by `bounds`.
+This event is fired when an end user stops dragging the element and releases it.
+
+#### `moved` {NgxDraggableMoveEvent}
+
+This event is fired for every movement the end user makes while dragging the element.
+
+#### `edge` {NgxDraggableBoundsCheckEvent}
+
+If `bounds` is set, this event will be fired defining the state of the interaction between the element and the bounds constraints. This event will be fired for every movement that collides with the bounds when constraining and when the end user stops dragging.
+
+### Events
+
+#### NgxDraggableMoveEvent
++ `target` {HTMLElement}
+  + The element that is being dragged.
++ `position` {DOMPoint}
+  + The current translation of the referenced element.
+
+#### NgxDraggableBoundsCheckEvent
++ `top` {boolean}
+  + If the element collided with the top edge of the bounds, this will be set to `true`.
++ `right` {boolean}
+  + If the element collided with the right edge of the bounds, this will be set to `true`.
++ `bottom` {boolean}
+  + If the element collided with the bottom edge of the bounds, this will be set to `true`.
++ `left` {boolean}
+  + If the element collided with the left edge of the bounds, this will be set to `true`.
++ `constrainedCenter` {DOMPoint}
+  + The calculated position of the element's center point as it should be constrained when interacting with the bounds.
++ `isConstrained` {boolean}
+  + If the element has being constrained after colliding with the bounds, this will be set to `true`.
 
 ### Public Functions
 
-`reset()` {void}:
+#### `reset()` {void}
 + Call this function on a reference to the directive in TypeScript code to request that the directive be reset to a default state. This is useful for when the draggable element has its location programmatically adjusted such that subsequent drags should not remember past translations that may affect future placement.
 
 ####  CSS
