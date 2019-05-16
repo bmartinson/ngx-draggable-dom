@@ -555,15 +555,18 @@ export class NgxDraggableDomDirective implements OnInit {
       // set the start position based on the element
       this.startPosition = this.elCenter;
 
-      // normalize the start position for the rotation
-      this.startPosition = rotatePoint(this.startPosition, boundsCenter, -boundsRotation);
+      // normalize by bounds positioning if available
+      if (this.bounds) {
+        // normalize the start position for the rotation
+        this.startPosition = rotatePoint(this.startPosition, boundsCenter, -boundsRotation);
 
-      // translate it back to the start position
-      this.startPosition.x -= this.curTrans.x;
-      this.startPosition.y -= this.curTrans.y;
+        // translate it back to the start position
+        this.startPosition.x -= this.curTrans.x;
+        this.startPosition.y -= this.curTrans.y;
 
-      // reapply the rotation to the start position
-      this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
+        // reapply the rotation to the start position
+        this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
+      }
 
       console.log("starting position", this.startPosition);
 
