@@ -1,5 +1,17 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.1.1"></a>
+## [1.1.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.0...:1.1.1) (2019-05-15)
+
+#### Overview
++ This update provides fixes for issue [#2](https://github.com/bmartinson/ngx-draggable-dom/issues/2) so the directive works on various parent positions of elements (relative, absolute, etc.). It also provides support for OnPush component usage and updates the wrapper project.
+
+#### Enhancements
++ The directive now invokes change detection manually so the directive can be used on elements that are used in OnPush components.
+
+#### Bug Fixes
++ Document scroll position is factored in so we can handle bounding in absolutely positioned contexts as well as relatively positioned ones.
+
 <a name="1.1.0"></a>
 ## [1.1.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.2...:1.1.0) (2019-05-15)
 
