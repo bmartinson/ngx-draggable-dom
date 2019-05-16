@@ -1,4 +1,16 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Inject, Input, OnInit, Output, Renderer2, ChangeDetectorRef, ViewRef } from "@angular/core";
+import {
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Inject,
+  Input,
+  OnInit,
+  Output,
+  Renderer2,
+  ChangeDetectorRef,
+  ViewRef,
+} from "@angular/core";
 import { NgxDraggableBoundsCheckEvent } from "../classes/ngx-draggable-bounds-check-event";
 import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
 import {
