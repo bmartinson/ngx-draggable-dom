@@ -434,11 +434,6 @@ export class NgxDraggableDomDirective implements OnInit {
           this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
         ));
 
-        console.log(new DOMPoint(
-          this.startPosition.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
-          this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
-        ));
-
         // hold the element in position if we are requested to be constrained
         if (boundsCheck && boundsCheck.isConstrained) {
           // update the translation using the constrained center point and bounds center
@@ -567,8 +562,6 @@ export class NgxDraggableDomDirective implements OnInit {
         // reapply the rotation to the start position
         this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
       }
-
-      console.log("starting position", this.startPosition);
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
