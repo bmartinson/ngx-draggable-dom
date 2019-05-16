@@ -9,6 +9,7 @@ export class NgxDraggableBoundsCheckEvent {
   public readonly bottom: boolean;
   public readonly left: boolean;
   public readonly constrainedCenter: DOMPoint | undefined;
+  public readonly translation: DOMPoint;
   public readonly isConstrained: boolean;
 
   /**
@@ -28,6 +29,7 @@ export class NgxDraggableBoundsCheckEvent {
    * @param bottom Whether the bottom edge has been breached or not.
    * @param left Whether the left edge has been breached or not.
    * @param elP0 The center point of the element if it were to be constrained by these bounds.
+   * @param translation The calculated translation from the starting point based on any bounds constraints.
    * @param isConstrained Whether the element should be constrained or not.
    */
   constructor(
@@ -36,6 +38,7 @@ export class NgxDraggableBoundsCheckEvent {
     bottom: boolean,
     left: boolean,
     elP0: DOMPoint,
+    translation: DOMPoint,
     isConstrained: boolean,
   ) {
     this.top = (!!top) ? top : false;
@@ -45,6 +48,7 @@ export class NgxDraggableBoundsCheckEvent {
     if (!!elP0) {
       this.constrainedCenter = elP0;
     }
+    this.translation =  (!!translation) ? translation : new DOMPoint(0, 0);
     this.isConstrained = (!!isConstrained) ? isConstrained : false;
   }
 

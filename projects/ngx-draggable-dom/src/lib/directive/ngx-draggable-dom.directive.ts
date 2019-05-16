@@ -437,8 +437,8 @@ export class NgxDraggableDomDirective implements OnInit {
         // hold the element in position if we are requested to be constrained
         if (boundsCheck && boundsCheck.isConstrained) {
           // update the translation using the constrained center point and bounds center
-          transX = boundsCheck.constrainedCenter.x - this.startPosition.x;
-          transY = boundsCheck.constrainedCenter.y - this.startPosition.y;
+          transX = boundsCheck.translation.x;
+          transY = boundsCheck.translation.y;
 
           // track whether we constrained or not
           this.constrainedX = this.curTrans.x === transX;
@@ -797,10 +797,30 @@ export class NgxDraggableDomDirective implements OnInit {
       }
     }
 
-    // displace the normalized element center
-    const constrainedElP0: DOMPoint = new DOMPoint(
+    // calculate the constrained position without rotating back
+    const normalizedConstrainedElP0: DOMPoint = new DOMPoint(
       normalizedElP0.x + ((displaceX !== undefined) ? displaceX : 0),
       normalizedElP0.y + ((displaceY !== undefined) ? displaceY : 0),
+    );
+
+    // normalize the start position for translation arithmetic
+    const normalizedStartPosition: DOMPoint = rotatePoint(
+      this.startPosition,
+      this.boundsCenter,
+      -boundsRotation,
+    );
+
+    // displace the normalized element center
+    const constrainedElP0: DOMPoint = rotatePoint(
+      normalizedConstrainedElP0,
+      boundsP0,
+      boundsRotation,
+    );
+
+    // calculate the difference for each direction from the start position
+    const translation: DOMPoint = new DOMPoint(
+      normalizedConstrainedElP0.x - normalizedStartPosition.x,
+      normalizedConstrainedElP0.y - normalizedStartPosition.y,
     );
 
     // clean up memory
@@ -814,6 +834,7 @@ export class NgxDraggableDomDirective implements OnInit {
       isBottomEdgeCollided,
       isLeftEdgeCollided,
       constrainedElP0,
+      translation,
       displaceX !== undefined || displaceY !== undefined,
     );
   }
