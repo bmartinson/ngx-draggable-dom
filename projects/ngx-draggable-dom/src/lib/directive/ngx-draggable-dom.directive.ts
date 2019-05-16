@@ -120,7 +120,7 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
-   * Calculates and returns the element's center point based on the bounding element's bounding rectangle.
+   * Calculates and returns the element's center point based on the element's bounding rectangle.
    *
    * @return A DOMPoint that represents the center point of the element.
    */
@@ -135,6 +135,25 @@ export class NgxDraggableDomDirective implements OnInit {
     return new DOMPoint(
       this.scrollLeft + elBounds.left + (elBounds.width / 2),
       this.scrollTop + elBounds.top + (elBounds.height / 2),
+    );
+  }
+
+  /**
+   * Calculates and returns the bounds' center point based on the bounding element's bounding rectangle.
+   *
+   * @return A DOMPoint that represents the center point of the bounds.
+   */
+  private get boundsCenter(): DOMPoint | null {
+    if (!this.bounds) {
+      return null;
+    }
+
+    // get the bounding box of the element
+    const boundsBounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
+
+    return new DOMPoint(
+      this.scrollLeft + boundsBounds.left + (boundsBounds.width / 2),
+      this.scrollTop + boundsBounds.top + (boundsBounds.height / 2),
     );
   }
 
@@ -415,6 +434,11 @@ export class NgxDraggableDomDirective implements OnInit {
           this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
         ));
 
+        console.log(new DOMPoint(
+          this.startPosition.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
+          this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
+        ));
+
         // hold the element in position if we are requested to be constrained
         if (boundsCheck && boundsCheck.isConstrained) {
           // update the translation using the constrained center point and bounds center
@@ -522,10 +546,26 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if we are not moving yet, emit the event to signal moving is beginning and start moving
     if (!this.moving) {
-      // set the start position
+      // get the bounds rotation for normalizing the position
+      const boundsRotation: number = getRotationForElement(this.bounds);
+
+      // get the bounds center for rotating
+      let boundsCenter: DOMPoint = this.boundsCenter;
+
+      // set the start position based on the element
       this.startPosition = this.elCenter;
+
+      // normalize the start position for the rotation
+      this.startPosition = rotatePoint(this.startPosition, boundsCenter, -boundsRotation);
+
+      // translate it back to the start position
       this.startPosition.x -= this.curTrans.x;
       this.startPosition.y -= this.curTrans.y;
+
+      // reapply the rotation to the start position
+      this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
+
+      console.log("starting position", this.startPosition);
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
@@ -538,6 +578,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
+
+      // clean up memory from in this scope
+      boundsCenter = null;
     }
 
     // update the view
@@ -627,18 +670,11 @@ export class NgxDraggableDomDirective implements OnInit {
       return null;
     }
 
-
-
     // generate the bounds dimensional information
-    let normalizedBoundsBounds: DOMRect;
-    let boundsBounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
     let boundsWidth: number = this.bounds.offsetWidth;
     let boundsHeight: number = this.bounds.offsetHeight;
     let boundsRotation: number = getRotationForElement(this.bounds);
-    let boundsP0: DOMPoint = new DOMPoint(
-      this.scrollLeft + boundsBounds.left + (boundsBounds.width / 2),
-      this.scrollTop + boundsBounds.top + (boundsBounds.height / 2),
-    );
+    let boundsP0: DOMPoint = this.boundsCenter;
 
     // generate the top left point position of the rotated bounds so we can understand it's true placement
     let boundsTL: DOMPoint = getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
@@ -650,8 +686,6 @@ export class NgxDraggableDomDirective implements OnInit {
     let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // generate the elements dimensional information
-    let normalizedElBounds: DOMRect;
-    let elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
     let elWidth: number = this.elWidth;
     let elHeight: number = this.elHeight;
     let elRotation: number = getTotalRotationForElement(this.el.nativeElement);
@@ -694,15 +728,12 @@ export class NgxDraggableDomDirective implements OnInit {
       isBLOutside && elBL.x <= checkBounds.left;
 
     // define variables to store the displacement of the element to constrain it within the bounds
-    let displaceX;
-    let displaceY;
+    let displaceX: number;
+    let displaceY: number;
     let constrainPoint: DOMPoint;
 
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
     if (!!this.constrainByBounds && isTopEdgeCollided || isRightEdgeCollided || isBottomEdgeCollided || isLeftEdgeCollided) {
-      // get the bounding box for the normalized boundaries
-      normalizedBoundsBounds = getBoundingBox(boundsP0, boundsWidth, boundsHeight, 0);
-
       // calculate the constraining displacement if the element fits within the width of the bounds
       if (elWidth < boundsWidth) {
         if (isRightEdgeCollided) {
@@ -777,9 +808,9 @@ export class NgxDraggableDomDirective implements OnInit {
     );
 
     // clean up memory
-    elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elBounds = elWidth = elHeight =
-      elRotation = elP0 = checkBounds = boundsBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
-      normalizedElBounds = normalizedElP0 = normalizedBoundsBounds = constrainPoint = null;
+    elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elWidth = elHeight =
+      elRotation = elP0 = checkBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
+      normalizedElP0 = constrainPoint = null;
 
     return new NgxDraggableBoundsCheckEvent(
       isTopEdgeCollided,
