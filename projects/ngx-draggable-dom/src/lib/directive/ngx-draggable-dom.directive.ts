@@ -43,14 +43,15 @@ export class NgxDraggableDomDirective implements OnInit {
   private constrainedX: boolean;
   private constrainedY: boolean;
   private computedRotation: number;
+  private startPosition: DOMPoint;
   private clientMoving: DOMPoint;
   private oldClientPosition: DOMPoint;
   private original: DOMPoint;
   private oldTrans: DOMPoint;
   private tempTrans: DOMPoint;
+  private curTrans: DOMPoint;
   private oldZIndex: string;
   private oldPosition: string;
-  private curTrans: DOMPoint;
 
   /**
    * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
@@ -137,25 +138,6 @@ export class NgxDraggableDomDirective implements OnInit {
     );
   }
 
-  /**
-   * Calculates and returns the bounds element's center point based on the bounding element's bounding rectangle.
-   *
-   * @return A DOMPoint that represents the center point of the element.
-   */
-  private get boundsCenter(): DOMPoint | null {
-    if (!this.bounds) {
-      return null;
-    }
-
-    // get the bounding box of the bounds element
-    const bounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
-
-    return new DOMPoint(
-      bounds.left + (bounds.width / 2),
-      bounds.top + (bounds.height / 2),
-    );
-  }
-
   constructor(
     @Inject(ElementRef) private el: ElementRef,
     @Inject(Renderer2) private renderer: Renderer2,
@@ -171,6 +153,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.oldClientPosition = this.original = null;
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
+    this.startPosition = new DOMPoint(0, 0);
     this.clientMoving = new DOMPoint(0, 0);
     this.oldTrans = new DOMPoint(0, 0);
     this.tempTrans = new DOMPoint(0, 0);
@@ -183,6 +166,9 @@ export class NgxDraggableDomDirective implements OnInit {
   public ngOnInit(): void {
     if (this.allowDrag) {
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-draggable");
+
+      // set the start position
+      this.startPosition = this.elCenter;
 
       // update the view
       this.ngDetectChanges();
@@ -374,7 +360,6 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   private moveTo(x: number, y: number): void {
     let boundsCheck: NgxDraggableBoundsCheckEvent;
-    let boundsCenter: DOMPoint;
     let matrix: number[];
     let transform: string;
 
@@ -397,34 +382,28 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // if the element is to be constrained by the bounds, we must check the bounds for the element
       if (this.constrainByBounds) {
-        // get the bounds center point for positioning information
-        boundsCenter = this.boundsCenter;
+        // check the bounds based on the element position
+        boundsCheck = this.boundsCheck(new DOMPoint(
+          this.startPosition.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
+          this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
+        ));
 
-        // check the bounds if we have access to the center point
-        if (!!boundsCenter) {
-          // check the bounds based on the element position
-          boundsCheck = this.boundsCheck(new DOMPoint(
-            boundsCenter.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
-            boundsCenter.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
-          ));
+        // hold the element in position if we are requested to be constrained
+        if (boundsCheck && boundsCheck.isConstrained) {
+          // update the translation using the constrained center point and bounds center
+          transX = boundsCheck.constrainedCenter.x - this.startPosition.x;
+          transY = boundsCheck.constrainedCenter.y - this.startPosition.y;
 
-          // hold the element in position if we are requested to be constrained
-          if (boundsCheck && boundsCheck.isConstrained) {
-            // update the translation using the constrained center point and bounds center
-            transX = boundsCheck.constrainedCenter.x - boundsCenter.x;
-            transY = boundsCheck.constrainedCenter.y - boundsCenter.y;
+          // track whether we constrained or not
+          this.constrainedX = this.curTrans.x === transX;
+          this.constrainedY = this.curTrans.y === transY;
 
-            // track whether we constrained or not
-            this.constrainedX = this.curTrans.x === transX;
-            this.constrainedY = this.curTrans.y === transY;
-
-            // if we constrained in one of the directions, update that direction's tempTrans value for putBack
-            if (this.constrainedX) {
-              this.tempTrans.x = transX;
-            }
-            if (this.constrainedY) {
-              this.tempTrans.y = transY;
-            }
+          // if we constrained in one of the directions, update that direction's tempTrans value for putBack
+          if (this.constrainedX) {
+            this.tempTrans.x = transX;
+          }
+          if (this.constrainedY) {
+            this.tempTrans.y = transY;
           }
         }
       }
@@ -474,7 +453,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // clean up memory
-    boundsCheck = matrix = transform = boundsCenter = null;
+    boundsCheck = matrix = transform = null;
   }
 
   /**
