@@ -1,6 +1,5 @@
 import { TestBed } from "@angular/core/testing";
-
-import { NgxDraggableDomDirective } from "./directive/ngx-draggable-dom.directive";
+import { NgxDraggableDomDirective } from "./ngx-draggable-dom.directive";
 
 describe("NgxDraggableDomDirective", () => {
   beforeEach(() => TestBed.configureTestingModule({}));
