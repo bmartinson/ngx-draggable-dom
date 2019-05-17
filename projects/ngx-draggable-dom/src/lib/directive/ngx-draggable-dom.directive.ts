@@ -42,6 +42,7 @@ export class NgxDraggableDomDirective implements OnInit {
   private moving: boolean;
   private computedRotation: number;
   private startPosition: DOMPoint;
+  private pickUpOffset: DOMPoint;
   private oldZIndex: string;
   private oldPosition: string;
   private fnMouseMove: (event: MouseEvent) => void;
@@ -198,6 +199,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
     this.startPosition = new DOMPoint(0, 0);
+    this.pickUpOffset = new DOMPoint(0, 0);
   }
 
   /**
@@ -240,7 +242,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // pick up the element for dragging
-    this.pickUp();
+    this.pickUp(event);
   }
 
   /**
@@ -286,7 +288,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
     if (this.moving && this.allowDrag) {
       // perform the move operation
-      this.moveTo(event.clientX, event.clientY);
+      this.moveTo(event.clientX - this.pickUpOffset.x, event.clientY - this.pickUpOffset.y);
     }
   }
 
@@ -305,7 +307,7 @@ export class NgxDraggableDomDirective implements OnInit {
       return;
     }
 
-    this.pickUp();
+    this.pickUp(event);
   }
 
   /**
@@ -333,7 +335,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
     if (this.moving && this.allowDrag) {
       // perform the move operation
-      this.moveTo(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
+      this.moveTo(event.changedTouches[0].clientX - this.pickUpOffset.x, event.changedTouches[0].clientY - this.pickUpOffset.y);
     }
   }
 
@@ -349,6 +351,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // reset the computed rotation
     this.computedRotation = 0;
+
+    // make sure the start position offset is reset
+    this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
     // reset the transform value on the nativeElement
     this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
@@ -461,11 +466,14 @@ export class NgxDraggableDomDirective implements OnInit {
 
   /**
    * Puts the element into a state of being moved setting appropriate styles and firing movement events when
-   * the element is just beginning to move.
+   * the element is just beginning to move. Here is where the start position and pick up offset is calculated.
+   *
+   * @param event The pick up event that will either be a mouse event or touch event.
    */
-  private pickUp(): void {
+  private pickUp(event: MouseEvent | TouchEvent | any): void {
     let matrix: number[];
     let translation: DOMPoint = new DOMPoint(0, 0);
+    let elCenter: DOMPoint = this.elCenter;
 
     // set a default position style
     let position = "relative";
@@ -488,10 +496,10 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // check if old position is draggable
     if (this.oldPosition && (
-        this.oldPosition === "absolute" ||
-        this.oldPosition === "fixed" ||
-        this.oldPosition === "relative"
-      )
+      this.oldPosition === "absolute" ||
+      this.oldPosition === "fixed" ||
+      this.oldPosition === "relative"
+    )
     ) {
       position = this.oldPosition;
     }
@@ -514,14 +522,11 @@ export class NgxDraggableDomDirective implements OnInit {
       document.addEventListener("mouseup", this.fnMouseUp);
       document.addEventListener("touchend", this.fnTouchEnd);
 
-      // get the bounds rotation for normalizing the position
-      const boundsRotation: number = getRotationForElement(this.bounds);
-
       // get the bounds center for rotating
       let boundsCenter: DOMPoint = this.boundsCenter;
 
       // set the start position based on the element
-      this.startPosition = this.elCenter;
+      this.startPosition = elCenter;
 
       // compute the current rotation of all parent nodes
       this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
@@ -541,6 +546,10 @@ export class NgxDraggableDomDirective implements OnInit {
       // reapply the rotation to the start position
       this.startPosition = rotatePoint(this.startPosition, (!!boundsCenter) ? boundsCenter : new DOMPoint(0, 0), this.computedRotation);
 
+      // calculate the offset position of the mouse compared to the element center
+      this.pickUpOffset.x = this.scrollLeft + event.clientX - elCenter.x;
+      this.pickUpOffset.y = this.scrollTop + event.clientY - elCenter.y;
+
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
@@ -558,7 +567,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.ngDetectChanges();
 
     // clean up memory
-    matrix = translation = position = null;
+    matrix = translation = position = elCenter = null;
   }
 
   /**
@@ -583,6 +592,9 @@ export class NgxDraggableDomDirective implements OnInit {
       // get the current transformation matrix and extract the current translation
       let matrix: number[] = getTransformMatrixForElement(this.el.nativeElement);
       let translation: DOMPoint = new DOMPoint(matrix[4], matrix[5]);
+
+      // reset the offset
+      this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
       // emit that we have stopped moving
       this.stopped.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
