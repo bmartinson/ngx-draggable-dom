@@ -50,6 +50,19 @@ export function rotatePoint(point: DOMPoint, pivot: DOMPoint, angle: number): DO
 }
 
 /**
+ * Calculates the linear distance between two provided points.
+ *
+ * @param p0 The first point.
+ * @param p1 The second point.
+ */
+export function getDistanceBetweenPoints(p0: DOMPoint, p1: DOMPoint): number {
+  return Math.sqrt(
+    ((p1.x - p0.x) * (p1.x - p0.x)) +
+    ((p1.y - p0.y) * (p1.y - p0.y))
+  );
+}
+
+/**
  * Find the coordinate point of the bounding box as defined by w and h and rotated by rotation degrees around point p0.
  *
  * @param p0 The center point of origin we are rotating around.
