@@ -14,10 +14,11 @@ import {
 import { NgxDraggableBoundsCheckEvent } from "../classes/ngx-draggable-bounds-check-event";
 import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
 import {
-  isPointInsideBounds,
-  getTransformedCoordinate,
-  rotatePoint,
   ElementHandle,
+  getDistanceBetweenPoints,
+  getTransformedCoordinate,
+  isPointInsideBounds,
+  rotatePoint,
 } from "../helpers/ngx-draggable-dom-math";
 import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
 
@@ -36,7 +37,8 @@ export class NgxDraggableDomDirective implements OnInit {
   @Input() private handle: HTMLElement;
   @Input() private bounds: HTMLElement;
   @Input() private constrainByBounds: boolean;
-  @Input() private requireHover: boolean;
+  @Input() private requireMouseOver: boolean;
+  @Input() private requireMouseOverBounds: boolean;
 
   private allowDrag: boolean;
   private moving: boolean;
@@ -194,7 +196,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moved = new EventEmitter<NgxDraggableMoveEvent>();
     this.edge = new EventEmitter<NgxDraggableBoundsCheckEvent>();
 
-    this.constrainByBounds = this.requireHover = this.moving = false;
+    this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.moving = false;
     this.allowDrag = true;
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
@@ -270,7 +272,7 @@ export class NgxDraggableDomDirective implements OnInit {
     event.preventDefault();
 
     // if the user is required to keep the mouse over the element, put it back
-    if (this.requireHover) {
+    if (this.requireMouseOver) {
       this.putBack();
     }
   }
@@ -286,10 +288,16 @@ export class NgxDraggableDomDirective implements OnInit {
     event.stopImmediatePropagation();
     event.preventDefault();
 
-    if (this.moving && this.allowDrag) {
+    // define the position of the mouse event
+    let mousePoint: DOMPoint = new DOMPoint(this.scrollLeft + event.clientX, this.scrollTop + event.clientY);
+
+    if (this.moving && this.allowDrag && this.allowMovementForPosition(mousePoint)) {
       // perform the move operation
       this.moveTo(event.clientX - this.pickUpOffset.x, event.clientY - this.pickUpOffset.y);
     }
+
+    // clean up memory
+    mousePoint = null;
   }
 
   /**
@@ -333,10 +341,19 @@ export class NgxDraggableDomDirective implements OnInit {
     event.stopImmediatePropagation();
     event.preventDefault();
 
-    if (this.moving && this.allowDrag) {
-      // perform the move operation
+    // define the position of the touch event
+    let touchPoint: DOMPoint = new DOMPoint(
+      this.scrollLeft + event.changedTouches[0].clientX,
+      this.scrollTop + event.changedTouches[0].clientY,
+    );
+
+    // perform the move operation if we are moving, allowing dragging, and the event is within the bounds
+    if (this.moving && this.allowDrag && this.allowMovementForPosition(touchPoint)) {
       this.moveTo(event.changedTouches[0].clientX - this.pickUpOffset.x, event.changedTouches[0].clientY - this.pickUpOffset.y);
     }
+
+    // clean up memory
+    touchPoint = null;
   }
 
   /* * * * * Draggable Logic * * * * */
@@ -364,6 +381,42 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // update the view
     this.ngDetectChanges();
+  }
+
+  /**
+   * Checks to see if a given point, that should represent the user's mouse position, resides within
+   * the bounds if they are defined and we are both checking for bounds constraints and if we are configured
+   * to hold the object steady when constrained and the cursor is outside of the bounds.
+   *
+   * @param point The point to check to see if it is inside of the boundaries
+   */
+  private allowMovementForPosition(point: DOMPoint): boolean {
+    if (!this.bounds || !this.constrainByBounds || !this.requireMouseOverBounds) {
+      return true;
+    }
+
+    // generate the bounds dimensional information
+    const boundsWidth: number = this.bounds.offsetWidth;
+    const boundsHeight: number = this.bounds.offsetHeight;
+    const boundsRotation: number = getRotationForElement(this.bounds);
+    let boundsP0: DOMPoint = this.boundsCenter;
+
+    // generate the top left point position of the rotated bounds so we can understand it's true placement
+    let boundsTL: DOMPoint = getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
+
+    // we must now rotate the point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
+    boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
+
+    // construct a rectangle that represents the position of the boundary in a normalized space
+    let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+
+    // calculate if the point is inside of the bounds
+    const isPointInside: boolean = isPointInsideBounds(point, checkBounds);
+
+    // clean up memory
+    boundsP0 = boundsTL = checkBounds = null;
+
+    return isPointInside;
   }
 
   /**
@@ -634,12 +687,14 @@ export class NgxDraggableDomDirective implements OnInit {
 
   /**
    * Uses the defined boundary element and checks for an intersection with the draggable element to determine
-   * if any edge has collided with one another.
+   * if any edge has collided with one another. If the edge is collided and we are constraining, we calculate a new translation value
+   * and constrained center point so we can position the element reliably within the bounds.
    *
    * @param elP0 The center point of the element position that boundaries should be checked on.
+   * @param isSecondaryBoundsCheck Optional parameter that indicates whether we are the secondary bounds check.
    * @return A NgxDraggableBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
    */
-  private boundsCheck(elP0: DOMPoint): NgxDraggableBoundsCheckEvent | null {
+  private boundsCheck(elP0: DOMPoint, isSecondaryBoundsCheck?: boolean): NgxDraggableBoundsCheckEvent | null {
     // don"t perform the bounds checking if the user has not requested it
     if (!this.bounds) {
       return null;
@@ -705,6 +760,7 @@ export class NgxDraggableDomDirective implements OnInit {
     // define variables to store the displacement of the element to constrain it within the bounds
     let displaceX: number;
     let displaceY: number;
+    let greatestConstrainDistance: number;
     let constrainPoint: DOMPoint;
 
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
@@ -712,29 +768,53 @@ export class NgxDraggableDomDirective implements OnInit {
       // calculate the constraining displacement if the element fits within the width of the bounds
       if (elWidth < boundsWidth) {
         if (isRightEdgeCollided) {
+          greatestConstrainDistance = 0;
+
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.x >= (checkBounds.left + checkBounds.width)) {
             constrainPoint = new DOMPoint(elTL.x, elTL.y);
-          } else if (isTROutside && elTR.x >= (checkBounds.left + checkBounds.width)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+          }
+          if (isTROutside && elTR.x >= (checkBounds.left + checkBounds.width) &&
+            getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elTR.x, elTR.y);
-          } else if (isBROutside && elBR.x >= (checkBounds.left + checkBounds.width)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+          }
+          if (isBROutside && elBR.x >= (checkBounds.left + checkBounds.width) &&
+            getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elBR.x, elBR.y);
-          } else if (isBLOutside && elBL.x >= (checkBounds.left + checkBounds.width)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+          }
+          if (isBLOutside && elBL.x >= (checkBounds.left + checkBounds.width) &&
+            getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elBL.x, elBL.y);
+            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
           displaceX = checkBounds.x + checkBounds.width - constrainPoint.x;
         } else if (isLeftEdgeCollided) {
+          greatestConstrainDistance = 0;
+
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.x <= checkBounds.left) {
             constrainPoint = new DOMPoint(elTL.x, elTL.y);
-          } else if (isTROutside && elTR.x <= checkBounds.left) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+          }
+          if (isTROutside && elTR.x <= checkBounds.left && getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elTR.x, elTR.y);
-          } else if (isBROutside && elBR.x <= checkBounds.left) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+          }
+          if (isBROutside && elBR.x <= checkBounds.left && getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elBR.x, elBR.y);
-          } else if (isBLOutside && elBL.x <= checkBounds.left) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+          }
+          if (isBLOutside && elBL.x <= checkBounds.left && getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elBL.x, elBL.y);
+            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
@@ -745,29 +825,53 @@ export class NgxDraggableDomDirective implements OnInit {
       // calculate the constraining displacement if the element fits within the height of the bounds
       if (elHeight < boundsHeight) {
         if (isBottomEdgeCollided) {
+          greatestConstrainDistance = 0;
+
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.y >= (checkBounds.top + checkBounds.height)) {
             constrainPoint = new DOMPoint(elTL.x, elTL.y);
-          } else if (isTROutside && elTR.y >= (checkBounds.top + checkBounds.height)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+          }
+          if (isTROutside && elTR.y >= (checkBounds.top + checkBounds.height) &&
+            getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elTR.x, elTR.y);
-          } else if (isBROutside && elBR.y >= (checkBounds.top + checkBounds.height)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+          }
+          if (isBROutside && elBR.y >= (checkBounds.top + checkBounds.height) &&
+            getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elBR.x, elBR.y);
-          } else if (isBLOutside && elBL.y >= (checkBounds.top + checkBounds.height)) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+          }
+          if (isBLOutside && elBL.y >= (checkBounds.top + checkBounds.height) &&
+            getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new DOMPoint(elBL.x, elBL.y);
+            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
           displaceY = checkBounds.y + checkBounds.height - constrainPoint.y;
         } else if (isTopEdgeCollided) {
+          greatestConstrainDistance = 0;
+
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.y <= checkBounds.top) {
             constrainPoint = new DOMPoint(elTL.x, elTL.y);
-          } else if (isTROutside && elTR.y <= checkBounds.top) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+          }
+          if (isTROutside && elTR.y <= checkBounds.top && getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elTR.x, elTR.y);
-          } else if (isBROutside && elBR.y <= checkBounds.top) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+          }
+          if (isBROutside && elBR.y <= checkBounds.top && getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elBR.x, elBR.y);
-          } else if (isBLOutside && elBL.y <= checkBounds.top) {
+            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+          }
+          if (isBLOutside && elBL.y <= checkBounds.top && getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance) {
             constrainPoint = new DOMPoint(elBL.x, elBL.y);
+            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
@@ -807,6 +911,15 @@ export class NgxDraggableDomDirective implements OnInit {
       elRotation = elP0 = checkBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
       normalizedElP0 = constrainPoint = normalizedConstrainedElP0 = normalizedStartPosition = null;
 
+    // if the bounds check will constrain the object, confirm that the constrained position is not colliding in another area
+    if ((displaceX !== undefined || displaceY !== undefined) && !isSecondaryBoundsCheck) {
+      const constrainedBoundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(constrainedElP0, true);
+      if (constrainedBoundsCheck.isConstrained) {
+        return constrainedBoundsCheck;
+      }
+    }
+
+    // return the bounds checking for this original pass
     return new NgxDraggableBoundsCheckEvent(
       isTopEdgeCollided,
       isRightEdgeCollided,

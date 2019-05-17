@@ -7,10 +7,12 @@
 + This update provides some improvements to the way element positioning and bounding are calculated and adds a new configurable property.
 
 #### Enhancements
-+ You can disable the put back of the element when the mouse is no longer hovering over the HTMLElement while dragging.
++ You can disable the put back of the element when the mouse is no longer hovering over the HTMLElement while dragging by using `requireMouseOver`.
++ You can disable any movement of the element when bounds constraining is turned on and the element is constrained and the user's mouse is outside of the bounds by using `requireMouseOverBounds`.
++ `NgxDraggableBoundsCheckEvent` now has an additional property that describes the translation that is needed to achieve the constrained center point position.
 
 #### Bug Fixes
-+ Boundary and element position calculations are more accurate now in all rotated contexts.
++ Boundary and element position calculations are more accurate now in all rotated contexts so constrained points don't collide with the bounds in a different direction.
 
 <a name="1.1.1"></a>
 ## [1.1.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.0...:1.1.1) (2019-05-15)

@@ -68,9 +68,13 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 + `true`: If `bounds` is set to true, the draggable element will be constrained by that HTMLElement.
 + `false` (default): If `bounds` is set to false, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
 
-`requireHover` {boolean}
-+ `true`: If `requireHover` is set to true, the draggable element will be put back down as soon as the mouse leaves the bounds of the HTMLElement.
-+ `false` (default): If `requireHover` is set to false, the draggable element will always follow the mouse position as long as the mouse is held down.
+`requireMouseOver` {boolean}
++ `true`: If `requireMouseOver` is set to true, the draggable element will be put back down as soon as the mouse leaves the HTMLElement.
++ `false` (default): If `requireMouseOver` is set to false, the draggable element will always follow the mouse position as long as the mouse is held down.
+
+`requireMouseOverBounds` {boolean}
++ `true`: If `requireMouseOverBounds` is set to true, the draggable element will not move when it is constrained by a bounds edge and the mouse position is outside of the bounds.
++ `false`: If `requireMouseOverBounds` is set to false, the draggable element can still move in an unconstrained direction while it is being constrained in another and the mouse position is outside of the bounds.
 
 ### Output Emitters
 
