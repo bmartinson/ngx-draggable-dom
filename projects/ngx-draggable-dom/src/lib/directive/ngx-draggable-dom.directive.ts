@@ -484,9 +484,10 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // check if old position is draggable
     if (this.oldPosition && (
-      this.oldPosition === "absolute" ||
-      this.oldPosition === "fixed" ||
-      this.oldPosition === "relative")
+        this.oldPosition === "absolute" ||
+        this.oldPosition === "fixed" ||
+        this.oldPosition === "relative"
+      )
     ) {
       position = this.oldPosition;
     }
@@ -509,23 +510,20 @@ export class NgxDraggableDomDirective implements OnInit {
       // compute the current rotation of all parent nodes
       this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
 
-      // normalize by bounds positioning if available
-      if (this.bounds) {
-        // normalize the start position for the rotation
-        this.startPosition = rotatePoint(this.startPosition, boundsCenter, -boundsRotation);
+      // normalize the start position for the rotation
+      this.startPosition = rotatePoint(this.startPosition, (!!boundsCenter) ? boundsCenter : new DOMPoint(0, 0), -this.computedRotation);
 
-        // get the current transformation matrix and extract the current translation
-        matrix = getTransformMatrixForElement(this.el.nativeElement);
-        translation.x = matrix[4];
-        translation.y = matrix[5];
+      // get the current transformation matrix and extract the current translation
+      matrix = getTransformMatrixForElement(this.el.nativeElement);
+      translation.x = matrix[4];
+      translation.y = matrix[5];
 
-        // translate it back to the start position
-        this.startPosition.x -= translation.x;
-        this.startPosition.y -= translation.y;
+      // translate it back to the start position
+      this.startPosition.x -= translation.x;
+      this.startPosition.y -= translation.y;
 
-        // reapply the rotation to the start position
-        this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
-      }
+      // reapply the rotation to the start position
+      this.startPosition = rotatePoint(this.startPosition, (!!boundsCenter) ? boundsCenter : new DOMPoint(0, 0), this.computedRotation);
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
