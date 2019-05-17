@@ -105,6 +105,8 @@ If `bounds` is set, this event will be fired defining the state of the interacti
   + If the element collided with the left edge of the bounds, this will be set to `true`.
 + `constrainedCenter` {DOMPoint}
   + The calculated position of the element's center point as it should be constrained when interacting with the bounds.
++ `translation` {DOMPoint}
+  + The calculated overall translation that the element should have applied to its transformation matrix.
 + `isConstrained` {boolean}
   + If the element has being constrained after colliding with the bounds, this will be set to `true`.
 
