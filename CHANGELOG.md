@@ -1,5 +1,14 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.2.0...1.2.1) (2019-05-17)
+
+#### Overview
++ This update modifies the math used to convert transform matrix rotation values to degrees.
+
+#### Bug Fixes
++ Fixed the angle calculation for transform matrices so that we properly calculate the rotation in all cases.
+
 <a name="1.2.0"></a>
 ## [1.2.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.1...1.2.0) (2019-05-17)
 
