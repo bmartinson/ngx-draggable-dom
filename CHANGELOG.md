@@ -1,7 +1,7 @@
 # Change History For ngx-draggable-dom
 
 <a name="1.2.0"></a>
-## [1.2.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.1...:1.2.0) (2019-05-16)
+## [1.2.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.1...1.2.0) (2019-05-17)
 
 #### Overview
 + This update provides some improvements to the way element positioning and bounding are calculated and adds a new configurable property.
@@ -15,7 +15,7 @@
 + Boundary and element position calculations are more accurate now in all rotated contexts so constrained points don't collide with the bounds in a different direction.
 
 <a name="1.1.1"></a>
-## [1.1.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.0...:1.1.1) (2019-05-15)
+## [1.1.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.0...1.1.1) (2019-05-15)
 
 #### Overview
 + This update provides fixes for issue [#2](https://github.com/bmartinson/ngx-draggable-dom/issues/2) so the directive works on various parent positions of elements (relative, absolute, etc.). It also provides support for OnPush component usage and updates the wrapper project.
@@ -27,7 +27,7 @@
 + Document scroll position is factored in so we can handle bounding in absolutely positioned contexts as well as relatively positioned ones.
 
 <a name="1.1.0"></a>
-## [1.1.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.2...:1.1.0) (2019-05-15)
+## [1.1.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.2...1.1.0) (2019-05-15)
 
 #### Overview
 + This update introduces a major re-working of the library, including breaking changes from the previous version, in order to fix a handful of issues. It also introduces an example playground as the wrapper project that you can use to test the library and explore its features.
@@ -45,13 +45,13 @@
 + Events and bounds data no longer are generic objects that adhere to interfaces. All custom interfaces have been removed and strongly typed class objects are now used for events.
 
 <a name="1.0.2"></a>
-## [1.0.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.1...bmartinson:1.0.2) (2019-05-02)
+## [1.0.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.1...1.0.2) (2019-05-02)
 
 #### Overview
 + This update uses the latest node packages to resolve vulnerability issues with dev dependencies.
 
 <a name="1.0.1"></a>
-## [1.0.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.0...bmartinson:1.0.1) (2019-02-15)
+## [1.0.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.0.0...1.0.1) (2019-02-15)
 
 #### Overview
 + This update makes it so the class `ng-dragging` is added to the element that the user is interacting with (the directed element or the set handle) as they are moving and removed when they stop. This was you can more easily style movement classes.
@@ -60,7 +60,7 @@
 + When you interact with an element that is using the directive, the `ng-dragging` class is added to the element. It is then removed when the user stops dragging the element. You may use this class style name along with the already existing `ng-draggable` to style your elements interactivity how you want.
 
 <a name="1.0.0"></a>
-## [1.0.0](https://github.com/bmartinson/ngx-draggable-dom/compare/0.0.1...bmartinson:1.0.0) (2019-02-14)
+## [1.0.0](https://github.com/bmartinson/ngx-draggable-dom/compare/0.0.1...1.0.0) (2019-02-14)
 
 #### Overview
 + This is the first official release of the ngx-draggable-dom directive built with the latest Ng7 dependencies using the Angular CLI.
