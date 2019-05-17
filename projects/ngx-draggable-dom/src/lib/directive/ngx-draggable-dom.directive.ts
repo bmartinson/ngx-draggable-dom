@@ -39,8 +39,6 @@ export class NgxDraggableDomDirective implements OnInit {
 
   private allowDrag: boolean;
   private moving: boolean;
-  private constrainedX: boolean;
-  private constrainedY: boolean;
   private computedRotation: number;
   private startPosition: DOMPoint;
   private oldZIndex: string;
@@ -520,14 +518,9 @@ export class NgxDraggableDomDirective implements OnInit {
         translation.x = matrix[4];
         translation.y = matrix[5];
 
-        // rotate the translation in the opposite direction of the computed parent rotation to normalize
-        // translation = rotatePoint(translation, new DOMPoint(0, 0), -this.computedRotation);
-
         // translate it back to the start position
         this.startPosition.x -= translation.x;
         this.startPosition.y -= translation.y;
-
-        console.log("start pos", this.startPosition);
 
         // reapply the rotation to the start position
         this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
