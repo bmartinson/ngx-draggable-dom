@@ -36,6 +36,7 @@ export class NgxDraggableDomDirective implements OnInit {
   @Input() private handle: HTMLElement;
   @Input() private bounds: HTMLElement;
   @Input() private constrainByBounds: boolean;
+  @Input() private requireHover: boolean;
 
   private allowDrag: boolean;
   private moving: boolean;
@@ -43,6 +44,10 @@ export class NgxDraggableDomDirective implements OnInit {
   private startPosition: DOMPoint;
   private oldZIndex: string;
   private oldPosition: string;
+  private fnMouseMove: (event: MouseEvent) => void;
+  private fnTouchMove: (event: TouchEvent | any) => void;
+  private fnMouseUp: (event: MouseEvent) => void;
+  private fnTouchEnd: (event: TouchEvent | any) => void;
 
   /**
    * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
@@ -188,7 +193,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moved = new EventEmitter<NgxDraggableMoveEvent>();
     this.edge = new EventEmitter<NgxDraggableBoundsCheckEvent>();
 
-    this.constrainByBounds = this.moving = false;
+    this.constrainByBounds = this.requireHover = this.moving = false;
     this.allowDrag = true;
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
@@ -243,7 +248,6 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The mouse event for the click release event.
    */
-  @HostListener("mouseup", ["$event"])
   private onMouseUp(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -263,7 +267,10 @@ export class NgxDraggableDomDirective implements OnInit {
     event.stopImmediatePropagation();
     event.preventDefault();
 
-    this.putBack();
+    // if the user is required to keep the mouse over the element, put it back
+    if (this.requireHover) {
+      this.putBack();
+    }
   }
 
   /**
@@ -272,7 +279,6 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The mouse event for the movement from the user's mouse.
    */
-  @HostListener("mousemove", ["$event"])
   private onMouseMove(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -307,7 +313,6 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
-  @HostListener("touchend", ["$event"])
   private onTouchEnd(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -321,7 +326,6 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
-  @HostListener("touchmove", ["$event"])
   private onTouchMove(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -498,6 +502,18 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if we are not moving yet, emit the event to signal moving is beginning and start moving
     if (!this.moving) {
+      // create references to the functions
+      this.fnMouseMove = this.onMouseMove.bind(this);
+      this.fnTouchMove = this.onTouchMove.bind(this);
+      this.fnMouseUp = this.onMouseUp.bind(this);
+      this.fnTouchEnd = this.onTouchEnd.bind(this);
+
+      // start listening for movement
+      document.addEventListener("mousemove", this.fnMouseMove);
+      document.addEventListener("touchmove", this.fnTouchMove);
+      document.addEventListener("mouseup", this.fnMouseUp);
+      document.addEventListener("touchend", this.fnTouchEnd);
+
       // get the bounds rotation for normalizing the position
       const boundsRotation: number = getRotationForElement(this.bounds);
 
@@ -558,6 +574,12 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if we are currently moving, then we can successfully put down to signal some movement actually occurred
     if (this.moving) {
+      // stop listening for movement
+      document.removeEventListener("mousemove", this.fnMouseMove);
+      document.removeEventListener("touchmove", this.fnTouchMove);
+      document.removeEventListener("mouseup", this.fnMouseUp);
+      document.removeEventListener("touchend", this.fnTouchEnd);
+
       // get the current transformation matrix and extract the current translation
       let matrix: number[] = getTransformMatrixForElement(this.el.nativeElement);
       let translation: DOMPoint = new DOMPoint(matrix[4], matrix[5]);

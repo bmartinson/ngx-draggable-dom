@@ -65,8 +65,12 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 + The element that represents the region the entire draggable element should be kept within. Note, by setting this property you are not forcing it to be constrained within the bounds.
 
 `constrainByBounds` {boolean}
-+ `true`: If `bounds` is set, the draggable element will be constrained by that HTMLElement.
-+ `false` (default): If `bounds` is set, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
++ `true`: If `bounds` is set to true, the draggable element will be constrained by that HTMLElement.
++ `false` (default): If `bounds` is set to false, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
+
+`requireHover` {boolean}
++ `true`: If `requireHover` is set to true, the draggable element will be put back down as soon as the mouse leaves the bounds of the HTMLElement.
++ `false` (default): If `requireHover` is set to false, the draggable element will always follow the mouse position as long as the mouse is held down.
 
 ### Output Emitters
 
