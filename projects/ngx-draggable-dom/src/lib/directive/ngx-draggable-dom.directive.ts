@@ -369,6 +369,10 @@ export class NgxDraggableDomDirective implements OnInit {
     let transform: string;
     let translation: DOMPoint = new DOMPoint(0, 0);
 
+    // factor in the scroll position of the page for the position of the drag
+    x += this.scrollLeft;
+    y += this.scrollTop;
+
     // create the numerical matrix we will use
     matrix = getTransformMatrixForElement(this.el.nativeElement);
 
