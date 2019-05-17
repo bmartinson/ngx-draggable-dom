@@ -1,5 +1,17 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.2.0"></a>
+## [1.2.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.1...:1.2.0) (2019-05-16)
+
+#### Overview
++ This update provides some improvements to the way element positioning and bounding are calculated and adds a new configurable property.
+
+#### Enhancements
++ You can disable the put back of the element when the mouse is no longer hovering over the HTMLElement while dragging.
+
+#### Bug Fixes
++ Boundary and element position calculations are more accurate now in all rotated contexts.
+
 <a name="1.1.1"></a>
 ## [1.1.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.1.0...:1.1.1) (2019-05-15)
 
