@@ -28,7 +28,7 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 1. Import `NgxDraggableDomModule` in your app module (or other Angular module) and place it in your imports section:
 
     ```typescript
-    import { NgxDraggableDomModule } from "NgxDraggableDomLibrary";
+    import { NgxDraggableDomModule } from "ngx-draggable-dom";
 
     @NgModule({
        imports: [
