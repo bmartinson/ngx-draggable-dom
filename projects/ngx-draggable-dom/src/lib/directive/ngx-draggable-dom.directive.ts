@@ -188,7 +188,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moved = new EventEmitter<NgxDraggableMoveEvent>();
     this.edge = new EventEmitter<NgxDraggableBoundsCheckEvent>();
 
-    this.constrainByBounds = this.moving = this.constrainedX = this.constrainedY = false;
+    this.constrainByBounds = this.moving = false;
     this.allowDrag = true;
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
@@ -340,7 +340,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * but will not modify the current state of any data bound properties.
    */
   public reset(): void {
-    this.moving = this.constrainedX = this.constrainedY = false;
+    this.moving = false;
     this.oldZIndex = this.oldPosition = "";
 
     // reset the computed rotation
@@ -395,9 +395,6 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // return the normalized translation back to the appropriate space
     translation = rotatePoint(translation, new DOMPoint(0, 0), -this.computedRotation);
-
-    // make sure the constrained tracking variables are cleared
-    // this.constrainedX = this.constrainedY = false;
 
     // if the element is to be constrained by the bounds, we must check the bounds for the element
     if (this.constrainByBounds) {
