@@ -18,7 +18,6 @@ import {
   getTransformedCoordinate,
   rotatePoint,
   ElementHandle,
-  getBoundingBox,
 } from "../helpers/ngx-draggable-dom-math";
 import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
 
@@ -44,12 +43,6 @@ export class NgxDraggableDomDirective implements OnInit {
   private constrainedY: boolean;
   private computedRotation: number;
   private startPosition: DOMPoint;
-  private clientMoving: DOMPoint;
-  private oldClientPosition: DOMPoint;
-  private original: DOMPoint;
-  private oldTrans: DOMPoint;
-  private tempTrans: DOMPoint;
-  private curTrans: DOMPoint;
   private oldZIndex: string;
   private oldPosition: string;
 
@@ -199,14 +192,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
     this.constrainByBounds = this.moving = this.constrainedX = this.constrainedY = false;
     this.allowDrag = true;
-    this.oldClientPosition = this.original = null;
     this.oldZIndex = this.oldPosition = "";
     this.computedRotation = 0;
     this.startPosition = new DOMPoint(0, 0);
-    this.clientMoving = new DOMPoint(0, 0);
-    this.oldTrans = new DOMPoint(0, 0);
-    this.tempTrans = new DOMPoint(0, 0);
-    this.curTrans = new DOMPoint(0, 0);
   }
 
   /**
@@ -247,9 +235,6 @@ export class NgxDraggableDomDirective implements OnInit {
     if (event.button === 2 || (this.handle !== undefined && event.target !== this.handle)) {
       return;
     }
-
-    // save the starting position of the drag event
-    this.original = new DOMPoint(event.clientX, event.clientY);
 
     // pick up the element for dragging
     this.pickUp();
@@ -296,19 +281,9 @@ export class NgxDraggableDomDirective implements OnInit {
     event.preventDefault();
 
     if (this.moving && this.allowDrag) {
-      // determine the distance this mouse move event is going in each direction
-      if (this.oldClientPosition) {
-        this.clientMoving.x = event.clientX - this.oldClientPosition.x;
-        this.clientMoving.y = event.clientY - this.oldClientPosition.y;
-      }
-
       // perform the move operation
       this.moveTo(event.clientX, event.clientY);
     }
-
-    // after moving, track our new location and mark that we are no longer moving
-    this.oldClientPosition = new DOMPoint(event.clientX, event.clientY);
-    this.clientMoving.x = this.clientMoving.y = 0;
   }
 
   /**
@@ -325,8 +300,6 @@ export class NgxDraggableDomDirective implements OnInit {
     if (this.handle !== undefined && event.target !== this.handle) {
       return;
     }
-
-    this.original = new DOMPoint(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
 
     this.pickUp();
   }
@@ -357,19 +330,9 @@ export class NgxDraggableDomDirective implements OnInit {
     event.preventDefault();
 
     if (this.moving && this.allowDrag) {
-      // determine the distance this mouse move event is going in each direction
-      if (this.oldClientPosition) {
-        this.clientMoving.x = event.changedTouches[0].clientX - this.oldClientPosition.x;
-        this.clientMoving.y = event.changedTouches[0].clientY - this.oldClientPosition.y;
-      }
-
       // perform the move operation
       this.moveTo(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
     }
-
-    // after moving, track our new location and mark that we are no longer moving
-    this.oldClientPosition = new DOMPoint(event.changedTouches[0].clientX, event.changedTouches[0].clientY);
-    this.clientMoving.x = this.clientMoving.y = 0;
   }
 
   /* * * * * Draggable Logic * * * * */
@@ -380,12 +343,10 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   public reset(): void {
     this.moving = this.constrainedX = this.constrainedY = false;
-    this.oldClientPosition = this.original = null;
     this.oldZIndex = this.oldPosition = "";
 
-    // reset all stored positions without defining a new object
-    this.clientMoving.x = this.clientMoving.y = this.oldTrans.x = this.oldTrans.y =
-      this.tempTrans.x = this.tempTrans.y = this.curTrans.x = this.curTrans.y = this.computedRotation = 0;
+    // reset the computed rotation
+    this.computedRotation = 0;
 
     // reset the transform value on the nativeElement
     this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
@@ -408,98 +369,91 @@ export class NgxDraggableDomDirective implements OnInit {
     let boundsCheck: NgxDraggableBoundsCheckEvent;
     let matrix: number[];
     let transform: string;
+    let translation: DOMPoint = new DOMPoint(0, 0);
 
-    if (this.original) {
-      // calculate the new translation
-      this.tempTrans.x = x - this.original.x;
-      this.tempTrans.y = y - this.original.y;
+    // create the numerical matrix we will use
+    matrix = getTransformMatrixForElement(this.el.nativeElement);
 
-      // calculate the default translation for this movement (without bounds constrain checking)
-      let transX = this.tempTrans.x + this.oldTrans.x;
-      let transY = this.tempTrans.y + this.oldTrans.y;
+    // extract translation data from the matrix in the rotated context and add our movement to it
+    translation.x = matrix[4];
+    translation.y = matrix[5];
 
-      // rotate the translation in the opposite direction of the computed parent rotation to normalize
-      const rotatedTranslation: DOMPoint = rotatePoint(new DOMPoint(transX, transY), new DOMPoint(0, 0), -this.computedRotation);
-      transX = rotatedTranslation.x;
-      transY = rotatedTranslation.y;
+    // rotate the translation in the opposite direction of the computed parent rotation to normalize
+    translation = rotatePoint(translation, new DOMPoint(0, 0), -this.computedRotation);
 
-      // make sure the constrained tracking variables are cleared
-      this.constrainedX = this.constrainedY = false;
+    // calculate the original position at the start of this drag
+    const dragPosition: DOMPoint = new DOMPoint(
+      this.startPosition.x + translation.x,
+      this.startPosition.y + translation.y,
+    );
 
-      // if the element is to be constrained by the bounds, we must check the bounds for the element
-      if (this.constrainByBounds) {
-        // check the bounds based on the element position
-        boundsCheck = this.boundsCheck(new DOMPoint(
-          this.startPosition.x + (this.tempTrans.x + this.oldTrans.x) + this.clientMoving.x,
-          this.startPosition.y + (this.tempTrans.y + this.oldTrans.y) + this.clientMoving.y,
-        ));
+    // calculate the new position
+    dragPosition.x += x - dragPosition.x;
+    dragPosition.y += y - dragPosition.y;
 
-        // hold the element in position if we are requested to be constrained
-        if (boundsCheck && boundsCheck.isConstrained) {
-          // update the translation using the constrained center point and bounds center
-          transX = boundsCheck.translation.x;
-          transY = boundsCheck.translation.y;
+    // update the normalized translation to represent the new transfer
+    translation.x = dragPosition.x - this.startPosition.x;
+    translation.y = dragPosition.y - this.startPosition.y;
 
-          // track whether we constrained or not
-          this.constrainedX = this.curTrans.x === transX;
-          this.constrainedY = this.curTrans.y === transY;
+    // return the normalized translation back to the appropriate space
+    translation = rotatePoint(translation, new DOMPoint(0, 0), -this.computedRotation);
 
-          // if we constrained in one of the directions, update that direction's tempTrans value for putBack
-          if (this.constrainedX) {
-            this.tempTrans.x = transX;
-          }
-          if (this.constrainedY) {
-            this.tempTrans.y = transY;
-          }
-        }
+    // make sure the constrained tracking variables are cleared
+    // this.constrainedX = this.constrainedY = false;
+
+    // if the element is to be constrained by the bounds, we must check the bounds for the element
+    if (this.constrainByBounds) {
+      // check the bounds based on the element position
+      boundsCheck = this.boundsCheck(new DOMPoint(
+        dragPosition.x,
+        dragPosition.y,
+      ));
+
+      // hold the element in position if we are requested to be constrained
+      if (boundsCheck && boundsCheck.isConstrained) {
+        // update the translation using the constrained center point and bounds center
+        translation = boundsCheck.translation;
       }
-
-      // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
-      if (window) {
-        // create the numerical matrix we will use
-        matrix = getTransformMatrixForElement(this.el.nativeElement);
-
-        // update the x and y values as part of the matrix
-        matrix[4] = transX;
-        matrix[5] = transY;
-
-        // convert the matrix to a string based css matrix definition
-        transform = "matrix(" + matrix.join() + ")";
-
-        // set the style on the element
-        this.renderer.setStyle(this.el.nativeElement, "transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
-      } else {
-        // set up the translation transform for all possible browser styles disregarding previous transform properties
-        transform = `translate(${transX}px, ${transY}px)`;
-        this.renderer.setStyle(this.el.nativeElement, "transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
-        this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
-      }
-
-      // track the current translation placement
-      this.curTrans.x = transX;
-      this.curTrans.y = transY;
-
-      // emit the output of the bounds check
-      if (boundsCheck) {
-        this.edge.emit(boundsCheck);
-      }
-
-      // emit the current translation
-      this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
-
-      // update the view
-      this.ngDetectChanges();
     }
 
+    // if it is possible, get the transform from the computed style and modify the matrix to maintain transform properties
+    if (window) {
+      // update the x and y values as part of the matrix
+      matrix[4] = translation.x;
+      matrix[5] = translation.y;
+
+      // convert the matrix to a string based css matrix definition
+      transform = "matrix(" + matrix.join() + ")";
+
+      // set the style on the element
+      this.renderer.setStyle(this.el.nativeElement, "transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+    } else {
+      // set up the translation transform for all possible browser styles disregarding previous transform properties
+      transform = `translate(${translation.x}px, ${translation.y}px)`;
+      this.renderer.setStyle(this.el.nativeElement, "transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+    }
+
+    // emit the output of the bounds check
+    if (boundsCheck) {
+      this.edge.emit(boundsCheck);
+    }
+
+    // emit the current translation
+    this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
+
+    // update the view
+    this.ngDetectChanges();
+
     // clean up memory
-    boundsCheck = matrix = transform = null;
+    boundsCheck = matrix = transform = translation = null;
   }
 
   /**
@@ -507,6 +461,9 @@ export class NgxDraggableDomDirective implements OnInit {
    * the element is just beginning to move.
    */
   private pickUp(): void {
+    let matrix: number[];
+    let translation: DOMPoint = new DOMPoint(0, 0);
+
     // set a default position style
     let position = "relative";
 
@@ -550,27 +507,37 @@ export class NgxDraggableDomDirective implements OnInit {
       // set the start position based on the element
       this.startPosition = this.elCenter;
 
+      // compute the current rotation of all parent nodes
+      this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
+
       // normalize by bounds positioning if available
       if (this.bounds) {
         // normalize the start position for the rotation
         this.startPosition = rotatePoint(this.startPosition, boundsCenter, -boundsRotation);
 
+        // get the current transformation matrix and extract the current translation
+        matrix = getTransformMatrixForElement(this.el.nativeElement);
+        translation.x = matrix[4];
+        translation.y = matrix[5];
+
+        // rotate the translation in the opposite direction of the computed parent rotation to normalize
+        // translation = rotatePoint(translation, new DOMPoint(0, 0), -this.computedRotation);
+
         // translate it back to the start position
-        this.startPosition.x -= this.curTrans.x;
-        this.startPosition.y -= this.curTrans.y;
+        this.startPosition.x -= translation.x;
+        this.startPosition.y -= translation.y;
+
+        console.log("start pos", this.startPosition);
 
         // reapply the rotation to the start position
         this.startPosition = rotatePoint(this.startPosition, boundsCenter, boundsRotation);
       }
 
       // fire the event to signal that the element has begun moving
-      this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
+      this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
       // flag that we are now in a state of movement
       this.moving = true;
-
-      // compute the current rotation of all parent nodes
-      this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
@@ -583,7 +550,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.ngDetectChanges();
 
     // clean up memory
-    position = null;
+    matrix = translation = position = null;
   }
 
   /**
@@ -599,8 +566,12 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if we are currently moving, then we can successfully put down to signal some movement actually occurred
     if (this.moving) {
+      // get the current transformation matrix and extract the current translation
+      let matrix: number[] = getTransformMatrixForElement(this.el.nativeElement);
+      let translation: DOMPoint = new DOMPoint(matrix[4], matrix[5]);
+
       // emit that we have stopped moving
-      this.stopped.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, this.curTrans));
+      this.stopped.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
       if (this.bounds) {
@@ -624,27 +595,9 @@ export class NgxDraggableDomDirective implements OnInit {
       // remove the ng-dragging class to the element we're interacting with
       this.renderer.removeClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
 
-      // if we're constrained just use the tempTrans value set by moveTo, else add to our last trans
-      if (this.constrainedX) {
-        this.oldTrans.x = this.tempTrans.x;
-      } else {
-        this.oldTrans.x += this.tempTrans.x;
-      }
-
-      // if we're constrained just use the tempTrans value set by moveTo, else add to our last trans
-      if (this.constrainedY) {
-        this.oldTrans.y = this.tempTrans.y;
-      } else {
-        this.oldTrans.y += this.tempTrans.y;
-      }
-
-      // clear the tempTrans for the next pickup
-      this.tempTrans.x = this.tempTrans.y = 0;
+      // clean up memory
+      matrix = translation = null;
     }
-
-    // clear our variables used to track movement direction during mouse move events
-    this.clientMoving.x = this.clientMoving.y = 0;
-    this.oldClientPosition = null;
 
     // reset the calculated rotation in case something changes when we're not dragging
     this.computedRotation = 0;
@@ -798,13 +751,13 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // calculate the constrained position without rotating back
-    const normalizedConstrainedElP0: DOMPoint = new DOMPoint(
+    let normalizedConstrainedElP0: DOMPoint = new DOMPoint(
       normalizedElP0.x + ((displaceX !== undefined) ? displaceX : 0),
       normalizedElP0.y + ((displaceY !== undefined) ? displaceY : 0),
     );
 
     // normalize the start position for translation arithmetic
-    const normalizedStartPosition: DOMPoint = rotatePoint(
+    let normalizedStartPosition: DOMPoint = rotatePoint(
       this.startPosition,
       this.boundsCenter,
       -boundsRotation,
@@ -826,7 +779,7 @@ export class NgxDraggableDomDirective implements OnInit {
     // clean up memory
     elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elWidth = elHeight =
       elRotation = elP0 = checkBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
-      normalizedElP0 = constrainPoint = null;
+      normalizedElP0 = constrainPoint = normalizedConstrainedElP0 = normalizedStartPosition = null;
 
     return new NgxDraggableBoundsCheckEvent(
       isTopEdgeCollided,
