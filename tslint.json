@@ -16,7 +16,7 @@
     "indent": [
       true,
       "spaces",
-      4
+      2
     ],
     "interface-name": false,
     "max-classes-per-file": false,
