@@ -11,8 +11,8 @@ import {
   ChangeDetectorRef,
   ViewRef,
 } from "@angular/core";
-import { NgxDraggableBoundsCheckEvent } from "../classes/ngx-draggable-bounds-check-event";
-import { NgxDraggableMoveEvent } from "../classes/ngx-draggable-move-event";
+import { NgxDraggableDomMoveEvent } from "../events/ngx-draggable-dom-move-event";
+import { NgxDraggableDomBoundsCheckEvent } from "../events/ngx-draggable-dom-bounds-check-event";
 import {
   ElementHandle,
   getDistanceBetweenPoints,
@@ -29,10 +29,10 @@ const MAX_SAFE_Z_INDEX = 16777271;
 })
 export class NgxDraggableDomDirective implements OnInit {
 
-  @Output() private started: EventEmitter<NgxDraggableMoveEvent>;
-  @Output() private stopped: EventEmitter<NgxDraggableMoveEvent>;
-  @Output() private moved: EventEmitter<NgxDraggableMoveEvent>;
-  @Output() private edge: EventEmitter<NgxDraggableBoundsCheckEvent>;
+  @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
+  @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
+  @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
+  @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
 
   @Input() private handle: HTMLElement;
   @Input() private bounds: HTMLElement;
@@ -191,10 +191,10 @@ export class NgxDraggableDomDirective implements OnInit {
     @Inject(Renderer2) private renderer: Renderer2,
     @Inject(ChangeDetectorRef) private changeRef: ChangeDetectorRef,
   ) {
-    this.started = new EventEmitter<NgxDraggableMoveEvent>();
-    this.stopped = new EventEmitter<NgxDraggableMoveEvent>();
-    this.moved = new EventEmitter<NgxDraggableMoveEvent>();
-    this.edge = new EventEmitter<NgxDraggableBoundsCheckEvent>();
+    this.started = new EventEmitter<NgxDraggableDomMoveEvent>();
+    this.stopped = new EventEmitter<NgxDraggableDomMoveEvent>();
+    this.moved = new EventEmitter<NgxDraggableDomMoveEvent>();
+    this.edge = new EventEmitter<NgxDraggableDomBoundsCheckEvent>();
 
     this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.moving = false;
     this.allowDrag = true;
@@ -426,7 +426,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param y The y position to move the element to.
    */
   private moveTo(x: number, y: number): void {
-    let boundsCheck: NgxDraggableBoundsCheckEvent;
+    let boundsCheck: NgxDraggableDomBoundsCheckEvent;
     let matrix: number[];
     let transform: string;
     let translation: DOMPoint = new DOMPoint(0, 0);
@@ -508,7 +508,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // emit the current translation
-    this.moved.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
+    this.moved.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
     // update the view
     this.ngDetectChanges();
@@ -604,7 +604,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.pickUpOffset.y = this.scrollTop + event.clientY - elCenter.y;
 
       // fire the event to signal that the element has begun moving
-      this.started.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
+      this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
       // flag that we are now in a state of movement
       this.moving = true;
@@ -650,7 +650,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
       // emit that we have stopped moving
-      this.stopped.emit(new NgxDraggableMoveEvent(this.el.nativeElement as HTMLElement, translation));
+      this.stopped.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
 
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
       if (this.bounds) {
@@ -659,7 +659,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
         if (!!elCenter) {
           // check the bounds based on the element position
-          const boundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(elCenter);
+          const boundsCheck: NgxDraggableDomBoundsCheckEvent = this.boundsCheck(elCenter);
 
           // emit the edge event so consumers know the current state of the position
           if (!!boundsCheck) {
@@ -692,9 +692,9 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param elP0 The center point of the element position that boundaries should be checked on.
    * @param isSecondaryBoundsCheck Optional parameter that indicates whether we are the secondary bounds check.
-   * @return A NgxDraggableBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
+   * @return A NgxDraggableDomBoundsCheckEvent indicating which boundary edges were violated or null if boundary check is disabled.
    */
-  private boundsCheck(elP0: DOMPoint, isSecondaryBoundsCheck?: boolean): NgxDraggableBoundsCheckEvent | null {
+  private boundsCheck(elP0: DOMPoint, isSecondaryBoundsCheck?: boolean): NgxDraggableDomBoundsCheckEvent | null {
     // don"t perform the bounds checking if the user has not requested it
     if (!this.bounds) {
       return null;
@@ -913,14 +913,14 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // if the bounds check will constrain the object, confirm that the constrained position is not colliding in another area
     if ((displaceX !== undefined || displaceY !== undefined) && !isSecondaryBoundsCheck) {
-      const constrainedBoundsCheck: NgxDraggableBoundsCheckEvent = this.boundsCheck(constrainedElP0, true);
+      const constrainedBoundsCheck: NgxDraggableDomBoundsCheckEvent = this.boundsCheck(constrainedElP0, true);
       if (constrainedBoundsCheck.isConstrained) {
         return constrainedBoundsCheck;
       }
     }
 
     // return the bounds checking for this original pass
-    return new NgxDraggableBoundsCheckEvent(
+    return new NgxDraggableDomBoundsCheckEvent(
       isTopEdgeCollided,
       isRightEdgeCollided,
       isBottomEdgeCollided,

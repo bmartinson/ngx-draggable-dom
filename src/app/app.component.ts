@@ -1,7 +1,9 @@
 import { AfterViewInit, Component, ViewChildren, QueryList, ChangeDetectorRef, ChangeDetectionStrategy, ViewRef } from "@angular/core";
-import { NgxDraggableDomDirective } from "../../projects/ngx-draggable-dom/src/public_api";
-import { NgxDraggableBoundsCheckEvent } from "projects/ngx-draggable-dom/src/lib/classes/ngx-draggable-bounds-check-event";
-import { NgxDraggableMoveEvent } from "projects/ngx-draggable-dom/src/lib/classes/ngx-draggable-move-event";
+import {
+  NgxDraggableDomBoundsCheckEvent,
+  NgxDraggableDomDirective,
+  NgxDraggableDomMoveEvent,
+} from "../../projects/ngx-draggable-dom/src/public_api";
 
 @Component({
   selector: "ngx-dd-root",
@@ -43,7 +45,7 @@ export class AppComponent implements AfterViewInit {
    * @param name The name of the event we are executing for.
    * @param event The event to print data for.
    */
-  public onPrintMoveEvent(name: string, event: NgxDraggableMoveEvent): void {
+  public onPrintMoveEvent(name: string, event: NgxDraggableDomMoveEvent): void {
     console.log(name, event.position);
   }
 
@@ -53,7 +55,7 @@ export class AppComponent implements AfterViewInit {
    * @param name The name of the event we are executing for.
    * @param event The event to print data for.
    */
-  public onPrintEdgeEvent(name: string, event: NgxDraggableBoundsCheckEvent): void {
+  public onPrintEdgeEvent(name: string, event: NgxDraggableDomBoundsCheckEvent): void {
     console.log(name, event);
   }
 

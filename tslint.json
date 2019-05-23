@@ -6,9 +6,11 @@
   "rules": {
     "array-type": false,
     "arrow-parens": false,
+    "component-class-suffix": true,
     "deprecation": {
       "severity": "warn"
     },
+    "directive-class-suffix": true,
     "import-blacklist": [
       true,
       "rxjs/Rx"
@@ -50,7 +52,10 @@
       true,
       "ignore-params"
     ],
+    "no-input-rename": true,
     "no-non-null-assertion": true,
+    "no-output-on-prefix": true,
+    "no-output-rename": true,
     "no-redundant-jsdoc": true,
     "no-switch-case-fall-through": true,
     "no-use-before-declare": true,
@@ -66,12 +71,8 @@
       "double"
     ],
     "trailing-comma": false,
-    "no-output-on-prefix": true,
-    "no-input-rename": true,
-    "no-output-rename": true,
     "use-life-cycle-interface": true,
     "use-pipe-transform-interface": true,
-    "component-class-suffix": true,
-    "directive-class-suffix": true
+    "variable-name": false
   }
 }

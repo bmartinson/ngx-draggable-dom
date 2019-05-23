@@ -81,27 +81,27 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 
 ### Output Emitters
 
-`started` {[NgxDraggableMoveEvent](#ngxdraggablemoveevent)}
+`started` {[NgxDraggableDomMoveEvent](#NgxDraggableDomMoveEvent)}
 + This event is fired when an end user starts dragging the element.
 
-`stopped` {[NgxDraggableMoveEvent](#ngxdraggablemoveevent)}
+`stopped` {[NgxDraggableDomMoveEvent](#NgxDraggableDomMoveEvent)}
 + This event is fired when an end user stops dragging the element and releases it.
 
-`moved` {[NgxDraggableMoveEvent](#ngxdraggablemoveevent)}
+`moved` {[NgxDraggableDomMoveEvent](#NgxDraggableDomMoveEvent)}
 + This event is fired for every movement the end user makes while dragging the element.
 
-`edge` {[NgxDraggableBoundsCheckEvent](#ngxdraggableboundscheckevent)}
+`edge` {[NgxDraggableDomBoundsCheckEvent](#NgxDraggableDomBoundsCheckEvent)}
 + If `bounds` is set, this event will be fired defining the state of the interaction between the element and the bounds constraints. This event will be fired for every movement that collides with the bounds when constraining and when the end user stops dragging.
 
 ### Events
 
-#### NgxDraggableMoveEvent
+#### NgxDraggableDomMoveEvent
 + `target` {HTMLElement}
   + The element that is being dragged.
 + `position` {DOMPoint}
   + The current translation of the referenced element.
 
-#### NgxDraggableBoundsCheckEvent
+#### NgxDraggableDomBoundsCheckEvent
 + `top` {boolean}
   + If the element collided with the top edge of the bounds, this will be set to `true`.
 + `right` {boolean}

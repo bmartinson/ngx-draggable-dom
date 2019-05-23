@@ -2,7 +2,7 @@
  * This object class represents a boundary check event that can be emitted by the directive indicating to the consumer
  * which edges are intersecting with the boundary defined to constrain the draggable element.
  */
-export class NgxDraggableBoundsCheckEvent {
+export class NgxDraggableDomBoundsCheckEvent {
 
   public readonly top: boolean;
   public readonly right: boolean;

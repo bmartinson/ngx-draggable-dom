@@ -2,7 +2,7 @@
  * This object class represents a move event that can be emitted by the directive indicating to the consumer
  * the position of the target element.
  */
-export class NgxDraggableMoveEvent {
+export class NgxDraggableDomMoveEvent {
 
   private _target: HTMLElement;
   private _position: DOMPoint;
