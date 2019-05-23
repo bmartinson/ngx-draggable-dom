@@ -68,34 +68,30 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 + The element that represents the region the entire draggable element should be kept within. Note, by setting this property you are not forcing it to be constrained within the bounds.
 
 `constrainByBounds` {boolean}
-+ `true`: If `bounds` is set to true, the draggable element will be constrained by that HTMLElement.
-+ `false` (default): If `bounds` is set to false, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
++ `true`: If `bounds` is set, the draggable element will be constrained by that HTMLElement.
++ `false` (default): If `bounds` is set, the draggable element will just report which boundary edge has been passed by in the `edge` output emitter.
 
 `requireMouseOver` {boolean}
-+ `true`: If `requireMouseOver` is set to true, the draggable element will be put back down as soon as the mouse leaves the HTMLElement.
-+ `false` (default): If `requireMouseOver` is set to false, the draggable element will always follow the mouse position as long as the mouse is held down.
++ `true`: The draggable element will be put back down as soon as the mouse leaves the HTMLElement.
++ `false` (default): The draggable element will always follow the mouse position as long as the mouse is held down.
 
 `requireMouseOverBounds` {boolean}
-+ `true`: If `requireMouseOverBounds` is set to true, the draggable element will not move when it is constrained by a bounds edge and the mouse position is outside of the bounds.
-+ `false`: If `requireMouseOverBounds` is set to false, the draggable element can still move in an unconstrained direction while it is being constrained in another and the mouse position is outside of the bounds.
++ `true`: The draggable element will not move when it is constrained by a bounds edge and the mouse position is outside of the bounds.
++ `false`: The draggable element can still move in an unconstrained direction while it is being constrained in another and the mouse position is outside of the bounds.
 
 ### Output Emitters
 
-#### `started` {NgxDraggableMoveEvent}
+`started` {NgxDraggableMoveEvent}
++ This event is fired when an end user starts dragging the element.
 
-This event is fired when an end user starts dragging the element.
+`stopped` {NgxDraggableMoveEvent}
++ This event is fired when an end user stops dragging the element and releases it.
 
-#### `stopped` {NgxDraggableMoveEvent}
+`moved` {NgxDraggableMoveEvent}
++ This event is fired for every movement the end user makes while dragging the element.
 
-This event is fired when an end user stops dragging the element and releases it.
-
-#### `moved` {NgxDraggableMoveEvent}
-
-This event is fired for every movement the end user makes while dragging the element.
-
-#### `edge` {NgxDraggableBoundsCheckEvent}
-
-If `bounds` is set, this event will be fired defining the state of the interaction between the element and the bounds constraints. This event will be fired for every movement that collides with the bounds when constraining and when the end user stops dragging.
+`edge` {NgxDraggableBoundsCheckEvent}
++ If `bounds` is set, this event will be fired defining the state of the interaction between the element and the bounds constraints. This event will be fired for every movement that collides with the bounds when constraining and when the end user stops dragging.
 
 ### Events
 
@@ -123,10 +119,10 @@ If `bounds` is set, this event will be fired defining the state of the interacti
 
 ### Public Functions
 
-#### `reset()` {void}
+`reset()` {void}
 + Call this function on a reference to the directive in TypeScript code to request that the directive be reset to a default state. This is useful for when the draggable element has its location programmatically adjusted such that subsequent drags should not remember past translations that may affect future placement.
 
-####  CSS
+###  CSS
 When `ngxDraggableDom` is enabled on some element, the `ngx-draggable` class is automatically assigned to it. When the user is actively dragging the element, the class `ngx-dragging` is applied to the element (or the specified handle). If you include the provided `ngx-draggable-dom.scss` styles into your project, you will receive native styling and support for turning off CSS transitions while interacting with the element. You can override these to customize the look and feel for when you are interacting with the element. For example, change the cursor style for draggable elements in your page by doing the following:
 
 ```css
