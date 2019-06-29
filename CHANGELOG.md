@@ -1,5 +1,14 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.3.1"></a>
+## [1.3.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.3.0...1.3.1) (2019-06-29)
+
+#### Overview
++ This update includes some dependency package updates. No functional changes for the directive itself.
+
+#### Enhancements
++ Updated packages.
+
 <a name="1.3.0"></a>
 ## [1.3.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.2.1...1.3.0) (2019-06-10)
 

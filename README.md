@@ -15,14 +15,17 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2019.06.29:
++ Version 1.3.1 features package updates.
+
+### 2019.06.10:
++ Version 1.3.0 supports Angular 8 and updates some naming conventions.
+
 ### 2019.05.17:
 + Version 1.2 is out that provides extra configuration options and improves boundary detection and constraining.
 
 ### 2019.05.15:
 + Version 1.1.1 has been released that fixes a number of issues with the library, most importantly allowing the directive to operate on an unlimited number of elements in the DOM and in varying rotated contexts.
-
-### 2019.05.02:
-+ Updated to use the latest node packages to resolve vulnerability issues with dev dependencies.
 
 ## Installation
 ```npm install ngx-draggable-dom --save```
