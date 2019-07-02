@@ -1,3 +1,5 @@
+import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
+
 /**
  * This object class represents a boundary check event that can be emitted by the directive indicating to the consumer
  * which edges are intersecting with the boundary defined to constrain the draggable element.
@@ -8,8 +10,8 @@ export class NgxDraggableDomBoundsCheckEvent {
   public readonly right: boolean;
   public readonly bottom: boolean;
   public readonly left: boolean;
-  public readonly constrainedCenter: DOMPoint | undefined;
-  public readonly translation: DOMPoint;
+  public readonly constrainedCenter: NgxDraggablePoint | undefined;
+  public readonly translation: NgxDraggablePoint;
   public readonly isConstrained: boolean;
 
   /**
@@ -37,8 +39,8 @@ export class NgxDraggableDomBoundsCheckEvent {
     right: boolean,
     bottom: boolean,
     left: boolean,
-    elP0: DOMPoint,
-    translation: DOMPoint,
+    elP0: NgxDraggablePoint,
+    translation: NgxDraggablePoint,
     isConstrained: boolean,
   ) {
     this.top = (!!top) ? top : false;
@@ -48,7 +50,7 @@ export class NgxDraggableDomBoundsCheckEvent {
     if (!!elP0) {
       this.constrainedCenter = elP0;
     }
-    this.translation =  (!!translation) ? translation : new DOMPoint(0, 0);
+    this.translation =  (!!translation) ? translation : new NgxDraggablePoint(0, 0);
     this.isConstrained = (!!isConstrained) ? isConstrained : false;
   }
 

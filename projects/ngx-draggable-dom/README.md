@@ -15,6 +15,9 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2019.07.02
++ Version 1.4.0 uses a custom implementation for points as DOMPoint is not ubiquitously supported yet.
+
 ### 2019.06.29:
 + Version 1.3.1 features package updates.
 
@@ -101,7 +104,7 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
 #### NgxDraggableDomMoveEvent
 + `target` {HTMLElement}
   + The element that is being dragged.
-+ `position` {DOMPoint}
++ `position` {NgxDraggablePoint}
   + The current translation of the referenced element.
 
 #### NgxDraggableDomBoundsCheckEvent
@@ -113,9 +116,9 @@ Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blo
   + If the element collided with the bottom edge of the bounds, this will be set to `true`.
 + `left` {boolean}
   + If the element collided with the left edge of the bounds, this will be set to `true`.
-+ `constrainedCenter` {DOMPoint}
++ `constrainedCenter` {NgxDraggablePoint}
   + The calculated position of the element's center point as it should be constrained when interacting with the bounds.
-+ `translation` {DOMPoint}
++ `translation` {NgxDraggablePoint}
   + The calculated overall translation that the element should have applied to its transformation matrix.
 + `isConstrained` {boolean}
   + If the element has being constrained after colliding with the bounds, this will be set to `true`.

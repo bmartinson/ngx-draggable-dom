@@ -2,6 +2,7 @@
  * Public API Surface of ngx-draggable-dom
  */
 
+export * from "./lib/classes/ngx-draggable-point";
 export * from "./lib/directive/ngx-draggable-dom.directive";
 export * from "./lib/events/ngx-draggable-dom-bounds-check-event";
 export * from "./lib/events/ngx-draggable-dom-move-event";
