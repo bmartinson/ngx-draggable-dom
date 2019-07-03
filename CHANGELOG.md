@@ -31,7 +31,7 @@
 ## [1.3.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.2.1...1.3.0) (2019-06-10)
 
 #### Overview
-+ This update supports Ng8, updates some naming conventions, and fixes security vulnurabilities.
++ This update supports Ng8, updates some naming conventions, and fixes security vulnerabilities.
 
 #### Enhancements
 + Patched security vulnerabilities in dependencies.
