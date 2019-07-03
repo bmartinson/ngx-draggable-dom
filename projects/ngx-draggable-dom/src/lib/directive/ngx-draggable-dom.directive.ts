@@ -410,7 +410,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    let checkBounds: ClientRect = new NgxDragg(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    let checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // calculate if the point is inside of the bounds
     const isPointInside: boolean = isPointInsideBounds(point, checkBounds);
@@ -805,7 +805,7 @@ export class NgxDraggableDomDirective implements OnInit {
           }
 
           // calculate the displacement
-          displaceX = checkBounds.x + checkBounds.width - constrainPoint.x;
+          displaceX = checkBounds.left + checkBounds.width - constrainPoint.x;
         } else if (isLeftEdgeCollided) {
           greatestConstrainDistance = 0;
 
@@ -828,7 +828,7 @@ export class NgxDraggableDomDirective implements OnInit {
           }
 
           // calculate the displacement
-          displaceX = checkBounds.x - constrainPoint.x;
+          displaceX = checkBounds.left - constrainPoint.x;
         }
       }
 
@@ -862,7 +862,7 @@ export class NgxDraggableDomDirective implements OnInit {
           }
 
           // calculate the displacement
-          displaceY = checkBounds.y + checkBounds.height - constrainPoint.y;
+          displaceY = checkBounds.top + checkBounds.height - constrainPoint.y;
         } else if (isTopEdgeCollided) {
           greatestConstrainDistance = 0;
 
@@ -885,7 +885,7 @@ export class NgxDraggableDomDirective implements OnInit {
           }
 
           // calculate the displacement
-          displaceY = checkBounds.y - constrainPoint.y;
+          displaceY = checkBounds.top - constrainPoint.y;
         }
       }
     }
