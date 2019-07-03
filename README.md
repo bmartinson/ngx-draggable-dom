@@ -16,7 +16,8 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
 ### 2019.07.02
-+ Version 1.4.0 uses a custom implementation for points as DOMPoint is not ubiquitously supported yet.
++ Version 1.4.0 uses a custom implementation for points as `DOMPoint` is not ubiquitously supported yet.
++ Version 1.5.0 changes all use of `DOMRect` to be `ClientRect` and internally uses a new implementation that implements `ClientRect` for code-ease.
 
 ### 2019.06.29:
 + Version 1.3.1 features package updates.
