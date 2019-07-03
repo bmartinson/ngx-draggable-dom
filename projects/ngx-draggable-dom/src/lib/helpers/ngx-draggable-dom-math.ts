@@ -1,4 +1,5 @@
 import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
+import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
 
 /**
  * Exported functions that are used to help with various mathematical calculations.
@@ -31,7 +32,7 @@ export enum ElementHandle {
  * @param bounds The boundaries that define where we want to check where the point resides.
  * @return True if the point resides within the bounds.
  */
-export function isPointInsideBounds(point: NgxDraggablePoint, bounds: ClientRect | DOMRect): boolean {
+export function isPointInsideBounds(point: NgxDraggablePoint, bounds: ClientRect): boolean {
   return (point.x > bounds.left && point.x < bounds.left + bounds.width &&
     point.y > bounds.top && point.y < bounds.top + bounds.height);
 }
@@ -125,7 +126,7 @@ export function getTransformedCoordinate(
  * @param rotation The rotation of the defined rectangle.
  * @return The bounding box rectangle.
  */
-export function getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rotation: number): DOMRect {
+export function getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rotation: number): ClientRect {
   // get the non rotated top left corner of the object
   const pTL: NgxDraggablePoint = new NgxDraggablePoint(p0.x - (w / 2), p0.y - (h / 2));
 
@@ -165,5 +166,5 @@ export function getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rota
     }
   }
 
-  return new DOMRect(bbPTL.x, bbPTL.y, bbPBR.x - bbPTL.x, bbPBR.y - bbPTL.y);
+  return new NgxDraggableRect(bbPTL.x, bbPTL.y, bbPBR.x - bbPTL.x, bbPBR.y - bbPTL.y);
 }

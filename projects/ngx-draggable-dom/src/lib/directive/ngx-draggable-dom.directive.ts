@@ -22,6 +22,7 @@ import {
 } from "../helpers/ngx-draggable-dom-math";
 import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
 import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
+import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
 
 const MAX_SAFE_Z_INDEX = 16777271;
 
@@ -409,7 +410,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    let checkBounds: ClientRect = new NgxDragg(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // calculate if the point is inside of the bounds
     const isPointInside: boolean = isPointInsideBounds(point, checkBounds);
@@ -722,7 +723,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    let checkBounds: DOMRect = new DOMRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    let checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // generate the elements dimensional information
     let elWidth: number = this.elWidth;
