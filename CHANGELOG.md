@@ -4,7 +4,7 @@
 ## [1.5.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.4.0...1.5.0) (2019-07-02)
 
 #### Overview
-+ This update is meant to provide a wider range of browser support by removing use of `DOMRect` in favor of a custom rect implementation that implements `ClientRect` and is not exported for use outside of the module. Any interaction with these new rectangles are performed as a `ClientRect`. Note this is a breaking change if you are using the exported helper function `getBoundingBox` in your application as it will no logner be a `DOMRect` that is returned but rather `ClientRect`.
++ This update is meant to provide a wider range of browser support by removing use of `DOMRect` in favor of a custom rect implementation that implements `ClientRect` and is not exported for use outside of the module. Any interaction with these new rectangles are performed as a `ClientRect`. Note this is a breaking change if you are using the exported helper function `getBoundingBox` in your application as it will no longer be a `DOMRect` that is returned but rather `ClientRect`.
 
 #### Bug Fixes
 + `DOMPoint` is no longer used as it is experimental and not standard ES. We will instead use a custom implementation specific to the directive to ensure maximum browser compatibility.
