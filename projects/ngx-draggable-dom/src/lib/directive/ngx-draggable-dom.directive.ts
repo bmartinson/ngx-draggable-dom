@@ -238,7 +238,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onMouseDown(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     // skip right clicks and clicks on the element if it can only be moved by the handle
     if (event.button === 2 || (this.handle !== undefined && event.target !== this.handle)) {
@@ -257,7 +261,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onMouseUp(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     this.putBack();
   }
@@ -271,7 +279,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onMouseLeave(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     // if the user is required to keep the mouse over the element, put it back
     if (this.requireMouseOver) {
@@ -288,7 +300,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onMouseMove(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     // define the position of the mouse event
     let mousePoint: NgxDraggablePoint = new NgxDraggablePoint(this.scrollLeft + event.clientX, this.scrollTop + event.clientY);
@@ -311,7 +327,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onTouchStart(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     if (this.handle !== undefined && event.target !== this.handle) {
       return;
@@ -328,7 +348,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onTouchEnd(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     this.putBack();
   }
@@ -341,7 +365,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private onTouchMove(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
-    event.preventDefault();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
 
     // define the position of the touch event
     let touchPoint: NgxDraggablePoint = new NgxDraggablePoint(
