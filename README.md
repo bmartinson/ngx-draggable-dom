@@ -15,6 +15,9 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2019.07.16
++ Version 1.5.1 specifically targets event default prevention so that child text input nodes can be focused.
+
 ### 2019.07.02
 + Version 1.4.0 uses a custom implementation for points as `DOMPoint` is not ubiquitously supported yet.
 + Version 1.5.0 changes all use of `DOMRect` to be `ClientRect` and internally uses a new implementation that implements `ClientRect` for code-ease.

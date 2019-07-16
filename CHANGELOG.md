@@ -1,5 +1,14 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.5.1"></a>
+## [1.5.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.5.0...1.5.1) (2019-07-16)
+
+#### Overview
++ This update fixes a bug where text input and other controls could not be properly focused that were child nodes to a node using the directive.
+
+#### Bug Fixes
++ `event.preventDefault()` is only called for mouse and touch events that are performed on elements that are instances of `HTMLImageElement` to ensure that we only block default browser image dragging behavior when an image is part of the `ngx-draggable-dom` element and we don't prevent the focusing of other controls.
+
 <a name="1.5.0"></a>
 ## [1.5.0](https://github.com/bmartinson/ngx-draggable-dom/compare/1.4.0...1.5.0) (2019-07-02)
 
