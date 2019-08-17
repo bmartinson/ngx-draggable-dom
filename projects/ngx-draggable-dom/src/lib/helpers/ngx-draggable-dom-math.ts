@@ -108,7 +108,7 @@ export function getTransformedCoordinate(
   const theta: number = rotation * Math.PI / 180;
 
   // calculate the new coordinate point with rotation applied
-  const p0p = new NgxDraggablePoint(newP.x + (w / 2), newP.y + (h / 2));
+  const p0p: NgxDraggablePoint = new NgxDraggablePoint(newP.x + (w / 2), newP.y + (h / 2));
   newP = new NgxDraggablePoint(
     ((p.x - p0p.x) * Math.cos(theta)) - ((p.y - p0p.y) * Math.sin(theta)) + p0p.x,
     ((p.x - p0p.x) * Math.sin(theta)) + ((p.y - p0p.y) * Math.cos(theta)) + p0p.y,
@@ -149,7 +149,7 @@ export function getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rota
   // calculate the bounding box top left and bottom right points
   const bbPTL: NgxDraggablePoint = new NgxDraggablePoint(Number.MAX_VALUE, Number.MAX_VALUE);
   const bbPBR: NgxDraggablePoint = new NgxDraggablePoint(Number.MIN_VALUE, Number.MIN_VALUE);
-  const pArr = [tl2, tr2, br2, bl2];
+  const pArr: NgxDraggablePoint[] = [tl2, tr2, br2, bl2];
   for (const curP of pArr) {
     if (curP.x < bbPTL.x) {
       bbPTL.x = curP.x;

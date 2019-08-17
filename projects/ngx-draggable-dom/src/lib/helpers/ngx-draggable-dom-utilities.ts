@@ -14,7 +14,7 @@ export function getTransformMatrixForElement(el: HTMLElement): number[] {
 
   if (window) {
     // get the computed transform style
-    let transform = window.getComputedStyle(
+    let transform: CSSStyleDeclaration = window.getComputedStyle(
       el,
       null,
     ).getPropertyValue("transform");
@@ -28,7 +28,7 @@ export function getTransformMatrixForElement(el: HTMLElement): number[] {
       let transformMatrix: string[] = transform.split(",");
 
       // convert the values of the matrix to numbers and add to our numerical matrix
-      for (let i = 0; i < transformMatrix.length; i++) {
+      for (let i: number = 0; i < transformMatrix.length; i++) {
         matrix[i] = +transformMatrix[i];
       }
       transformMatrix = null;

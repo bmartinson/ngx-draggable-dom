@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Directive,
   ElementRef,
   EventEmitter,
@@ -8,11 +9,12 @@ import {
   OnInit,
   Output,
   Renderer2,
-  ChangeDetectorRef,
   ViewRef,
 } from "@angular/core";
-import { NgxDraggableDomMoveEvent } from "../events/ngx-draggable-dom-move-event";
+import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
+import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
 import { NgxDraggableDomBoundsCheckEvent } from "../events/ngx-draggable-dom-bounds-check-event";
+import { NgxDraggableDomMoveEvent } from "../events/ngx-draggable-dom-move-event";
 import {
   ElementHandle,
   getDistanceBetweenPoints,
@@ -21,10 +23,8 @@ import {
   rotatePoint,
 } from "../helpers/ngx-draggable-dom-math";
 import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
-import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
-import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
 
-const MAX_SAFE_Z_INDEX = 16777271;
+const MAX_SAFE_Z_INDEX: number = 16777271;
 
 @Directive({
   selector: "[ngxDraggableDom]",
@@ -559,7 +559,7 @@ export class NgxDraggableDomDirective implements OnInit {
     let elCenter: NgxDraggablePoint = this.elCenter;
 
     // set a default position style
-    let position = "relative";
+    let position: string = "relative";
 
     // get old z-index and position based on the direct style access
     this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : "";

@@ -50,7 +50,7 @@ export class NgxDraggableDomBoundsCheckEvent {
     if (!!elP0) {
       this.constrainedCenter = elP0;
     }
-    this.translation =  (!!translation) ? translation : new NgxDraggablePoint(0, 0);
+    this.translation = (!!translation) ? translation : new NgxDraggablePoint(0, 0);
     this.isConstrained = (!!isConstrained) ? isConstrained : false;
   }
 

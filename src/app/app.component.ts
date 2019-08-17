@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ViewChildren, QueryList, ChangeDetectorRef, ChangeDetectionStrategy, ViewRef } from "@angular/core";
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren, ViewRef } from "@angular/core";
 import {
   NgxDraggableDomBoundsCheckEvent,
   NgxDraggableDomDirective,

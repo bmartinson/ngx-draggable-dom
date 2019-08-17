@@ -41,14 +41,15 @@ img {
   }
 
   &#ngx-dd-custom-style-example {
+
     // custom override for cursor styling examples
     .ngx-draggable {
-        cursor: grab;
+      cursor: grab;
     }
 
     // custom override for cursor styling examples
     .ngx-dragging {
-        cursor: grabbing;
+      cursor: grabbing;
     }
   }
 }
