@@ -14,7 +14,7 @@ export function getTransformMatrixForElement(el: HTMLElement): number[] {
 
   if (window) {
     // get the computed transform style
-    let transform: CSSStyleDeclaration = window.getComputedStyle(
+    let transform: string = window.getComputedStyle(
       el,
       null,
     ).getPropertyValue("transform");
