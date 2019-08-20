@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "NgxDraggableDomLibrary": {
+    "ngx-draggable-dom-library": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/NgxDraggableDomLibrary",
+            "outputPath": "dist/ngx-draggable-dom-library",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -62,18 +62,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "NgxDraggableDomLibrary:build"
+            "browserTarget": "ngx-draggable-dom-library:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "NgxDraggableDomLibrary:build:production"
+              "browserTarget": "ngx-draggable-dom-library:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "NgxDraggableDomLibrary:build"
+            "browserTarget": "ngx-draggable-dom-library:build"
           }
         },
         "test": {
@@ -107,7 +107,7 @@
         }
       }
     },
-    "NgxDraggableDomLibrary-e2e": {
+    "ngx-draggable-dom-library-e2e": {
       "root": "e2e/",
       "projectType": "application",
       "prefix": "",
@@ -116,11 +116,11 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "NgxDraggableDomLibrary:serve"
+            "devServerTarget": "ngx-draggable-dom-library:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "NgxDraggableDomLibrary:serve:production"
+              "devServerTarget": "ngx-draggable-dom-library:serve:production"
             }
           }
         },
