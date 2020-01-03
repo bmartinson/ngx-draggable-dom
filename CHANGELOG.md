@@ -1,5 +1,11 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.5.2"></a>
+## [1.5.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.5.1...1.5.2) (2020-01-03)
+
+#### Overview
++ This update makes sure that all of the latest package dependencies are being used.
+
 <a name="1.5.1"></a>
 ## [1.5.1](https://github.com/bmartinson/ngx-draggable-dom/compare/1.5.0...1.5.1) (2019-07-16)
 

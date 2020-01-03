@@ -15,6 +15,9 @@ This package provides a directive for Angular 7+ that makes any DOM element drag
 ## Latest News
 Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
 
+### 2020.01.03
++ Version 1.5.2 updates to the latest package dependencies.
+
 ### 2019.07.16
 + Version 1.5.1 specifically targets event default prevention so that child text input nodes can be focused.
 
