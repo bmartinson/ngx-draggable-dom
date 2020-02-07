@@ -1,5 +1,11 @@
 # Change History For ngx-draggable-dom
 
+<a name="1.6.2"></a>
+## [1.6.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.5.2...1.6.0) (2020-02-07)
+
+#### Overview
++ This update officially supports Angular 9.
+
 <a name="1.5.2"></a>
 ## [1.5.2](https://github.com/bmartinson/ngx-draggable-dom/compare/1.5.1...1.5.2) (2020-01-03)
 
