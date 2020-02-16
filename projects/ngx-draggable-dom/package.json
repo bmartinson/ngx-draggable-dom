@@ -1,6 +1,6 @@
 {
   "name": "ngx-draggable-dom",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "private": false,
   "license": "MIT",
   "author": "Brian Martinson <brian@brianmartinson.com> (https://brianmartinson.com/)",
@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/bmartinson/ngx-draggable-dom#readme",
   "peerDependencies": {
-    "@angular/common": "^7.0.0 || ^8.0.0 || ^9.0.0",
-    "@angular/core": "^7.0.0 || ^8.0.0 || ^9.0.0"
+    "@angular/common": "^9.0.0",
+    "@angular/core": "^9.0.0"
   }
 }

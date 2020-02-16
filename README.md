@@ -12,37 +12,6 @@ Angular attribute directive that causes any element to become a draggable elemen
 ## About This Package
 This package provides a directive for Angular 7+ that makes any DOM element draggable. This project began as a fork of the [angular2-draggable](https://github.com/xieziyu/angular2-draggable) directive by [xieziyu](https://github.com/xieziyu) and was created to provide a more robust set of features and to keep package releases on the bleeding edge. The initial fork was known as ng2-draggable-dom and was deprecated in favor of this package that runs using the latest Angular dependencies and tools for libraries.
 
-## Latest News
-Always check the [CHANGELOG](https://github.com/bmartinson/ngx-draggable-dom/blob/master/CHANGELOG.md) for more detailed information about what's brand new. See the top of this README to see what the current version of this module is.
-
-### 2020.02.07
-+ Version 1.6.0 updates to support Angular 9.
-
-### 2020.01.03
-+ Version 1.5.2 updates to the latest package dependencies.
-
-### 2019.07.16
-+ Version 1.5.1 specifically targets event default prevention so that child text input nodes can be focused.
-
-### 2019.07.02
-+ Version 1.4.0 uses a custom implementation for points as `DOMPoint` is not ubiquitously supported yet.
-+ Version 1.5.0 changes all use of `DOMRect` to be `ClientRect` and internally uses a new implementation that implements `ClientRect` for code-ease.
-
-### 2019.06.29:
-+ Version 1.3.1 features package updates.
-
-### 2019.06.10:
-+ Version 1.3.0 supports Angular 8 and updates some naming conventions.
-
-### 2019.05.17:
-+ Version 1.2 is out that provides extra configuration options and improves boundary detection and constraining.
-
-### 2019.05.15:
-+ Version 1.1.1 has been released that fixes a number of issues with the library, most importantly allowing the directive to operate on an unlimited number of elements in the DOM and in varying rotated contexts.
-
-## Installation
-```npm install ngx-draggable-dom --save```
-
 ## Usage
 1. Import `NgxDraggableDomModule` in your app module (or other Angular module) and place it in your imports section:
 
