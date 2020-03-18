@@ -5,7 +5,7 @@ describe("NgxDraggableDomDirective", () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it("should be created", () => {
-    const directive: NgxDraggableDomDirective = TestBed.get(NgxDraggableDomDirective);
+    const directive: NgxDraggableDomDirective = TestBed.inject(NgxDraggableDomDirective);
     expect(directive).toBeTruthy();
   });
 });
