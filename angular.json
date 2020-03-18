@@ -146,6 +146,11 @@
           "options": {
             "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.json",
             "project": "projects/ngx-draggable-dom/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.prod.json"
+            }
           }
         },
         "test": {
