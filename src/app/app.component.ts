@@ -3,7 +3,7 @@ import {
   NgxDraggableDomBoundsCheckEvent,
   NgxDraggableDomDirective,
   NgxDraggableDomMoveEvent,
-} from '../../projects/ngx-draggable-dom/src/public_api';
+} from '../../projects/ngx-draggable-dom/src/public-api';
 
 @Component({
   selector: 'app-root',

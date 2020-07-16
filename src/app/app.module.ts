@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { NgxDraggableDomModule } from '../../projects/ngx-draggable-dom/src/public_api';
+import { NgxDraggableDomModule } from '../../projects/ngx-draggable-dom/src/public-api';
 import { AppComponent } from './app.component';
 
 @NgModule({
