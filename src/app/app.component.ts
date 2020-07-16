@@ -1,14 +1,14 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren, ViewRef } from "@angular/core";
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren, ViewRef } from '@angular/core';
 import {
   NgxDraggableDomBoundsCheckEvent,
   NgxDraggableDomDirective,
   NgxDraggableDomMoveEvent,
-} from "../../projects/ngx-draggable-dom/src/public_api";
+} from '../../projects/ngx-draggable-dom/src/public_api';
 
 @Component({
-  selector: "ngx-dd-root",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements AfterViewInit {

@@ -1,9 +1,0 @@
-e2e
-node_modules
-projects
-src
-.editorconfig
-.gitignore
-debug.log
-package-lock.json
-.idea

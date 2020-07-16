@@ -1,5 +1,5 @@
-import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
-import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
+import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
+import { NgxDraggableRect } from '../classes/ngx-draggable-rect';
 
 /**
  * Exported functions that are used to help with various mathematical calculations.
@@ -8,14 +8,14 @@ import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
 /* * * * * Related Enums * * * * */
 
 export enum ElementHandle {
-  TL = "tl",
-  TR = "tr",
-  BL = "bl",
-  BR = "br",
-  L = "ml",
-  R = "mr",
-  T = "mt",
-  B = "mb",
+  TL = 'tl',
+  TR = 'tr',
+  BL = 'bl',
+  BR = 'br',
+  L = 'ml',
+  R = 'mr',
+  T = 'mt',
+  B = 'mb',
 }
 
 /* * * * * Helper Functions * * * * */

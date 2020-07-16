@@ -17,18 +17,18 @@ export function getTransformMatrixForElement(el: HTMLElement): number[] {
     let transform: string = window.getComputedStyle(
       el,
       null,
-    ).getPropertyValue("transform");
+    ).getPropertyValue('transform');
 
     // strip non matrix values from the string
-    transform = transform.replace(/matrix/g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/ /g, "");
+    transform = transform.replace(/matrix/g, '').replace(/\(/g, '').replace(/\)/g, '').replace(/ /g, '');
 
     // if we have a transform set, convert the string matrix to a numerical one
-    if (transform !== "none") {
+    if (transform !== 'none') {
       // split the string based on commas
-      let transformMatrix: string[] = transform.split(",");
+      let transformMatrix: string[] = transform.split(',');
 
       // convert the values of the matrix to numbers and add to our numerical matrix
-      for (let i: number = 0; i < transformMatrix.length; i++) {
+      for (let i = 0; i < transformMatrix.length; i++) {
         matrix[i] = +transformMatrix[i];
       }
       transformMatrix = null;
@@ -69,7 +69,7 @@ export function getTotalRotationForElement(node: HTMLElement, rotation = 0): num
   }
 
   // if we have reached the body, stop processing beyond here
-  if (node.nodeName === "BODY") {
+  if (node.nodeName === 'BODY') {
     return rotation + getRotationForElement(node);
   }
 

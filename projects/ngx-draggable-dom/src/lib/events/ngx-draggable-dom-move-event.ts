@@ -1,4 +1,4 @@
-import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
+import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
 
 /**
  * This object class represents a move event that can be emitted by the directive indicating to the consumer

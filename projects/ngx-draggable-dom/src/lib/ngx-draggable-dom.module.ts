@@ -1,5 +1,5 @@
-import { NgModule } from "@angular/core";
-import { NgxDraggableDomDirective } from "./directive/ngx-draggable-dom.directive";
+import { NgModule } from '@angular/core';
+import { NgxDraggableDomDirective } from './directive/ngx-draggable-dom.directive';
 
 @NgModule({
   declarations: [

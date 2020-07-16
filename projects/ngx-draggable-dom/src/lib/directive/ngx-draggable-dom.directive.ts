@@ -10,24 +10,24 @@ import {
   Output,
   Renderer2,
   ViewRef,
-} from "@angular/core";
-import { NgxDraggablePoint } from "../classes/ngx-draggable-point";
-import { NgxDraggableRect } from "../classes/ngx-draggable-rect";
-import { NgxDraggableDomBoundsCheckEvent } from "../events/ngx-draggable-dom-bounds-check-event";
-import { NgxDraggableDomMoveEvent } from "../events/ngx-draggable-dom-move-event";
+} from '@angular/core';
+import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
+import { NgxDraggableRect } from '../classes/ngx-draggable-rect';
+import { NgxDraggableDomBoundsCheckEvent } from '../events/ngx-draggable-dom-bounds-check-event';
+import { NgxDraggableDomMoveEvent } from '../events/ngx-draggable-dom-move-event';
 import {
   ElementHandle,
   getDistanceBetweenPoints,
   getTransformedCoordinate,
   isPointInsideBounds,
   rotatePoint,
-} from "../helpers/ngx-draggable-dom-math";
-import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from "../helpers/ngx-draggable-dom-utilities";
+} from '../helpers/ngx-draggable-dom-math';
+import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from '../helpers/ngx-draggable-dom-utilities';
 
-const MAX_SAFE_Z_INDEX: number = 16777271;
+const MAX_SAFE_Z_INDEX = 16777271;
 
 @Directive({
-  selector: "[ngxDraggableDom]",
+  selector: '[ngxDraggableDom]',
 })
 export class NgxDraggableDomDirective implements OnInit {
 
@@ -59,7 +59,7 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param enabled Whether the draggable behavior should be turned on or off.
    */
-  @Input("ngxDraggableDom")
+  @Input('ngxDraggableDom')
   public set ngxDraggableDom(enabled: boolean) {
     // if no value is provided for the attribute directive name, then turn it on by default
     if (enabled === undefined || enabled === null) {
@@ -75,9 +75,9 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // if we are allowed to drag, provide the draggable class, otherwise remove it
       if (this.allowDrag) {
-        this.renderer.addClass(draggableControl, "ngx-draggable");
+        this.renderer.addClass(draggableControl, 'ngx-draggable');
       } else {
-        this.renderer.removeClass(draggableControl, "ngx-draggable");
+        this.renderer.removeClass(draggableControl, 'ngx-draggable');
       }
 
       // update the view
@@ -200,7 +200,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
     this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.moving = false;
     this.allowDrag = true;
-    this.oldZIndex = this.oldPosition = "";
+    this.oldZIndex = this.oldPosition = '';
     this.computedRotation = 0;
     this.startPosition = new NgxDraggablePoint(0, 0);
     this.pickUpOffset = new NgxDraggablePoint(0, 0);
@@ -211,7 +211,7 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   public ngOnInit(): void {
     if (this.allowDrag) {
-      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-draggable");
+      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-draggable');
 
       // update the view
       this.ngDetectChanges();
@@ -234,7 +234,7 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The mouse event for the click event.
    */
-  @HostListener("mousedown", ["$event"])
+  @HostListener('mousedown', ['$event'])
   private onMouseDown(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -275,7 +275,7 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The mouse event for when the mouse leaves the element.
    */
-  @HostListener("mouseleave", ["$event"])
+  @HostListener('mouseleave', ['$event'])
   private onMouseLeave(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -323,7 +323,7 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
-  @HostListener("touchstart", ["$event"])
+  @HostListener('touchstart', ['$event'])
   private onTouchStart(event: TouchEvent | any): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
@@ -394,7 +394,7 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   public reset(): void {
     this.moving = false;
-    this.oldZIndex = this.oldPosition = "";
+    this.oldZIndex = this.oldPosition = '';
 
     // reset the computed rotation
     this.computedRotation = 0;
@@ -403,11 +403,11 @@ export class NgxDraggableDomDirective implements OnInit {
     this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
     // reset the transform value on the nativeElement
-    this.renderer.removeStyle(this.el.nativeElement, "-webkit-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-ms-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-moz-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "-o-transform");
-    this.renderer.removeStyle(this.el.nativeElement, "transform");
+    this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-ms-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-moz-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-o-transform');
+    this.renderer.removeStyle(this.el.nativeElement, 'transform');
 
     // update the view
     this.ngDetectChanges();
@@ -514,22 +514,22 @@ export class NgxDraggableDomDirective implements OnInit {
       matrix[5] = translation.y;
 
       // convert the matrix to a string based css matrix definition
-      transform = "matrix(" + matrix.join() + ")";
+      transform = 'matrix(' + matrix.join() + ')';
 
       // set the style on the element
-      this.renderer.setStyle(this.el.nativeElement, "transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, 'transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-webkit-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-ms-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-moz-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-o-transform', transform);
     } else {
       // set up the translation transform for all possible browser styles disregarding previous transform properties
       transform = `translate(${translation.x}px, ${translation.y}px)`;
-      this.renderer.setStyle(this.el.nativeElement, "transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-webkit-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-ms-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-moz-transform", transform);
-      this.renderer.setStyle(this.el.nativeElement, "-o-transform", transform);
+      this.renderer.setStyle(this.el.nativeElement, 'transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-webkit-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-ms-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-moz-transform', transform);
+      this.renderer.setStyle(this.el.nativeElement, '-o-transform', transform);
     }
 
     // emit the output of the bounds check
@@ -559,37 +559,37 @@ export class NgxDraggableDomDirective implements OnInit {
     let elCenter: NgxDraggablePoint = this.elCenter;
 
     // set a default position style
-    let position: string = "relative";
+    let position = 'relative';
 
     // get old z-index and position based on the direct style access
-    this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : "";
-    this.oldPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : "";
+    this.oldZIndex = this.el.nativeElement.style.zIndex ? this.el.nativeElement.style.zIndex : '';
+    this.oldPosition = this.el.nativeElement.style.position ? this.el.nativeElement.style.position : '';
 
     // fetch the old z-index and position from computing the style applied to the element
     if (window) {
       this.oldZIndex = window.getComputedStyle(
         this.el.nativeElement,
         null,
-      ).getPropertyValue("z-index");
+      ).getPropertyValue('z-index');
       this.oldPosition = window.getComputedStyle(
         this.el.nativeElement,
         null,
-      ).getPropertyValue("position");
+      ).getPropertyValue('position');
     }
 
     // check if old position is draggable
     if (this.oldPosition && (
-      this.oldPosition === "absolute" ||
-      this.oldPosition === "fixed" ||
-      this.oldPosition === "relative"
+      this.oldPosition === 'absolute' ||
+      this.oldPosition === 'fixed' ||
+      this.oldPosition === 'relative'
     )
     ) {
       position = this.oldPosition;
     }
 
     // set the position and z-index for when the object is in a dragging state
-    this.renderer.setStyle(this.el.nativeElement, "position", position);
-    this.renderer.setStyle(this.el.nativeElement, "z-index", String(MAX_SAFE_Z_INDEX));
+    this.renderer.setStyle(this.el.nativeElement, 'position', position);
+    this.renderer.setStyle(this.el.nativeElement, 'z-index', String(MAX_SAFE_Z_INDEX));
 
     // if we are not moving yet, emit the event to signal moving is beginning and start moving
     if (!this.moving) {
@@ -600,10 +600,10 @@ export class NgxDraggableDomDirective implements OnInit {
       this.fnTouchEnd = this.onTouchEnd.bind(this);
 
       // start listening for movement
-      document.addEventListener("mousemove", this.fnMouseMove);
-      document.addEventListener("touchmove", this.fnTouchMove);
-      document.addEventListener("mouseup", this.fnMouseUp);
-      document.addEventListener("touchend", this.fnTouchEnd);
+      document.addEventListener('mousemove', this.fnMouseMove);
+      document.addEventListener('touchmove', this.fnTouchMove);
+      document.addEventListener('mouseup', this.fnMouseUp);
+      document.addEventListener('touchend', this.fnTouchEnd);
 
       // get the bounds center for rotating
       let boundsCenter: NgxDraggablePoint = this.boundsCenter;
@@ -648,7 +648,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.moving = true;
 
       // add the ngx-dragging class to the element we're interacting with
-      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
+      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-dragging');
 
       // clean up memory from in this scope
       boundsCenter = null;
@@ -667,18 +667,18 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   private putBack(): void {
     if (this.oldZIndex) {
-      this.renderer.setStyle(this.el.nativeElement, "z-index", this.oldZIndex);
+      this.renderer.setStyle(this.el.nativeElement, 'z-index', this.oldZIndex);
     } else {
-      this.el.nativeElement.style.removeProperty("z-index");
+      this.el.nativeElement.style.removeProperty('z-index');
     }
 
     // if we are currently moving, then we can successfully put down to signal some movement actually occurred
     if (this.moving) {
       // stop listening for movement
-      document.removeEventListener("mousemove", this.fnMouseMove);
-      document.removeEventListener("touchmove", this.fnTouchMove);
-      document.removeEventListener("mouseup", this.fnMouseUp);
-      document.removeEventListener("touchend", this.fnTouchEnd);
+      document.removeEventListener('mousemove', this.fnMouseMove);
+      document.removeEventListener('touchmove', this.fnTouchMove);
+      document.removeEventListener('mouseup', this.fnMouseUp);
+      document.removeEventListener('touchend', this.fnTouchEnd);
 
       // get the current transformation matrix and extract the current translation
       let matrix: number[] = getTransformMatrixForElement(this.el.nativeElement);
@@ -710,7 +710,7 @@ export class NgxDraggableDomDirective implements OnInit {
       this.moving = false;
 
       // remove the ng-dragging class to the element we're interacting with
-      this.renderer.removeClass(this.handle ? this.handle : this.el.nativeElement, "ngx-dragging");
+      this.renderer.removeClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-dragging');
 
       // clean up memory
       matrix = translation = null;
