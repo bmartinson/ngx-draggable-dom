@@ -39,6 +39,7 @@
         "spaces"
       ]
     },
+    "lines-between-class-members": true,
     "max-classes-per-file": false,
     "max-line-length": [
       true,
@@ -149,6 +150,7 @@
     "use-pipe-transform-interface": true
   },
   "rulesDirectory": [
-    "codelyzer"
+    "codelyzer",
+    "node_modules/tslint-lines-between-class-members"
   ]
 }
