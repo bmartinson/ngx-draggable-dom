@@ -1,4 +1,4 @@
-# ngx-draggable-dom [![npm version](https://badge.fury.io/js/ngx-draggable-dom.svg)](http://badge.fury.io/js/ngx-draggable-dom) [![npm downloads](https://img.shields.io/npm/dm/ngx-draggable-dom.svg)](https://npmjs.org/ngx-draggable-dom)
+# ngx-draggable-dom
 
 Angular attribute directive that causes any element to become a draggable element.
 

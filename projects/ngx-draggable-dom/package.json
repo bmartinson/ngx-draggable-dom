@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/bmartinson/ngx-draggable-dom#readme",
   "peerDependencies": {
-    "@angular/common": "^7.0.0 || ^8.0.0 || ^9.0.0",
-    "@angular/core": "^7.0.0 || ^8.0.0 || ^9.0.0"
+    "@angular/common": "^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0",
+    "@angular/core": "^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0"
   }
 }
