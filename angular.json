@@ -165,5 +165,8 @@
       }
     }
   },
-  "defaultProject": "ngx-draggable-dom"
+  "defaultProject": "ngx-draggable-dom",
+  "cli": {
+    "analytics": "8c12f3e5-b313-4eab-9aff-2670bf93a098"
+  }
 }
