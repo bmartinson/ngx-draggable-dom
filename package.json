@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build-publish": "ng build --prod && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
