@@ -15,7 +15,7 @@ export class NgxDraggableDomMoveEvent {
    * @return The reference to the HTMLElement being moved.
    */
   public get target(): HTMLElement {
-    return this.target;
+    return this._target;
   }
 
   /**
