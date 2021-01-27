@@ -25,14 +25,13 @@ export class NgxDraggableDomDirective implements OnInit {
 
   private static MAX_SAFE_Z_INDEX = 16777271;
 
+  @Input() public bounds: HTMLElement | undefined;
+  @Input() public constrainByBounds: boolean;
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
-
   @Input() private handle: HTMLElement | undefined;
-  @Input() private bounds: HTMLElement | undefined;
-  @Input() private constrainByBounds: boolean;
   @Input() private requireMouseOver: boolean;
   @Input() private requireMouseOverBounds: boolean;
 

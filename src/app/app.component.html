@@ -46,7 +46,7 @@
   <h3>Element styles to help you see the bounds. See how bounds detection and element constraining works in all rotated
     contexts.</h3>
   <div class="ngx-dd-row"
-       [style.height.px]="rotatedBounds?.getBoundingClientRect().height">
+       [style.height.px]="rotatedBounds?.getBoundingClientRect()?.height">
     <div class="ngx-dd-bounds-rotated"
          #rotatedBounds>
       <img [ngxDraggableDom]="true"
