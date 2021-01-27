@@ -34,7 +34,7 @@ export class NgxDraggableDomBoundsCheckEvent {
    * @param translation The calculated translation from the starting point based on any bounds constraints.
    * @param isConstrained Whether the element should be constrained or not.
    */
-  constructor(
+  public constructor(
     top: boolean,
     right: boolean,
     bottom: boolean,

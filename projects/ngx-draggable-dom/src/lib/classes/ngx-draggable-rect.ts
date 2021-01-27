@@ -52,7 +52,7 @@ export class NgxDraggableRect implements ClientRect {
     }
   }
 
-  constructor(x: number, y: number, width: number, height: number) {
+  public constructor(x: number, y: number, width: number, height: number) {
     this.x = (!!x) ? x : 0;
     this.y = (!!y) ? y : 0;
     this.width = (!!width) ? width : 0;

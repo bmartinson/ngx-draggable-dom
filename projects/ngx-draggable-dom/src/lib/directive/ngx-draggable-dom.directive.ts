@@ -15,29 +15,23 @@ import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
 import { NgxDraggableRect } from '../classes/ngx-draggable-rect';
 import { NgxDraggableDomBoundsCheckEvent } from '../events/ngx-draggable-dom-bounds-check-event';
 import { NgxDraggableDomMoveEvent } from '../events/ngx-draggable-dom-move-event';
-import {
-  ElementHandle,
-  getDistanceBetweenPoints,
-  getTransformedCoordinate,
-  isPointInsideBounds,
-  rotatePoint,
-} from '../helpers/ngx-draggable-dom-math';
-import { getRotationForElement, getTotalRotationForElement, getTransformMatrixForElement } from '../helpers/ngx-draggable-dom-utilities';
-
-const MAX_SAFE_Z_INDEX = 16777271;
+import { ElementHandle, NgxDraggableMath } from '../helpers/ngx-draggable-dom-math';
+import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities';
 
 @Directive({
   selector: '[ngxDraggableDom]',
 })
 export class NgxDraggableDomDirective implements OnInit {
 
+  private static MAX_SAFE_Z_INDEX = 16777271;
+
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
 
-  @Input() private handle: HTMLElement;
-  @Input() private bounds: HTMLElement;
+  @Input() private handle: HTMLElement | undefined;
+  @Input() private bounds: HTMLElement | undefined;
   @Input() private constrainByBounds: boolean;
   @Input() private requireMouseOver: boolean;
   @Input() private requireMouseOverBounds: boolean;
@@ -45,21 +39,21 @@ export class NgxDraggableDomDirective implements OnInit {
   private allowDrag: boolean;
   private moving: boolean;
   private computedRotation: number;
-  private startPosition: NgxDraggablePoint;
+  private startPosition: NgxDraggablePoint | null;
   private pickUpOffset: NgxDraggablePoint;
   private oldZIndex: string;
   private oldPosition: string;
-  private fnMouseMove: (event: MouseEvent) => void;
-  private fnTouchMove: (event: TouchEvent | any) => void;
-  private fnMouseUp: (event: MouseEvent) => void;
-  private fnTouchEnd: (event: TouchEvent | any) => void;
+  private fnMouseMove: ((event: MouseEvent) => void) | undefined;
+  private fnTouchMove: ((event: TouchEvent | any) => void) | undefined;
+  private fnMouseUp: ((event: MouseEvent) => void) | undefined;
+  private fnTouchEnd: ((event: TouchEvent | any) => void) | undefined;
 
   /**
    * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
    *
    * @param enabled Whether the draggable behavior should be turned on or off.
    */
-  @Input('ngxDraggableDom')
+  @Input()
   public set ngxDraggableDom(enabled: boolean) {
     // if no value is provided for the attribute directive name, then turn it on by default
     if (enabled === undefined || enabled === null) {
@@ -188,7 +182,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
   }
 
-  constructor(
+  public constructor(
     @Inject(ElementRef) private el: ElementRef,
     @Inject(Renderer2) private renderer: Renderer2,
     @Inject(ChangeDetectorRef) private changeRef: ChangeDetectorRef,
@@ -205,29 +199,6 @@ export class NgxDraggableDomDirective implements OnInit {
     this.startPosition = new NgxDraggablePoint(0, 0);
     this.pickUpOffset = new NgxDraggablePoint(0, 0);
   }
-
-  /**
-   * Angular lifecycle hook for initialization that ensures that the draggable class is applied to the element.
-   */
-  public ngOnInit(): void {
-    if (this.allowDrag) {
-      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-draggable');
-
-      // update the view
-      this.ngDetectChanges();
-    }
-  }
-
-  /**
-   * Invoked the Angular change detector to ensure that changes to the element's styling are reflected in the view.
-   */
-  private ngDetectChanges(): void {
-    if (this.changeRef && !(this.changeRef as ViewRef).destroyed) {
-      this.changeRef.detectChanges();
-    }
-  }
-
-  /* * * * * Event Handlers * * * * */
 
   /**
    * Event handler for when the element starts moving via mouse interaction.
@@ -254,23 +225,6 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
-   * Event handler for when the element is done being dragged as indicated by a mouse release.
-   *
-   * @param event The mouse event for the click release event.
-   */
-  private onMouseUp(event: MouseEvent): void {
-    // stop all default behavior and propagation of the event so it is fully consumed by us
-    event.stopImmediatePropagation();
-
-    // prevent the default mouse behavior on images so that browser image dragging is disabled
-    if (event.target instanceof HTMLImageElement) {
-      event.preventDefault();
-    }
-
-    this.putBack();
-  }
-
-  /**
    * Event handler for when the mouse leaves the element so the drag event ends.
    *
    * @param event The mouse event for when the mouse leaves the element.
@@ -289,33 +243,6 @@ export class NgxDraggableDomDirective implements OnInit {
     if (this.requireMouseOver) {
       this.putBack();
     }
-  }
-
-  /**
-   * Event handler for when the mouse moves. If the element is currently picked up, then we will apply transformations
-   * to the element to move it.
-   *
-   * @param event The mouse event for the movement from the user's mouse.
-   */
-  private onMouseMove(event: MouseEvent): void {
-    // stop all default behavior and propagation of the event so it is fully consumed by us
-    event.stopImmediatePropagation();
-
-    // prevent the default mouse behavior on images so that browser image dragging is disabled
-    if (event.target instanceof HTMLImageElement) {
-      event.preventDefault();
-    }
-
-    // define the position of the mouse event
-    let mousePoint: NgxDraggablePoint = new NgxDraggablePoint(this.scrollLeft + event.clientX, this.scrollTop + event.clientY);
-
-    if (this.moving && this.allowDrag && this.allowMovementForPosition(mousePoint)) {
-      // perform the move operation
-      this.moveTo(event.clientX - this.pickUpOffset.x, event.clientY - this.pickUpOffset.y);
-    }
-
-    // clean up memory
-    mousePoint = null;
   }
 
   /**
@@ -338,6 +265,99 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     this.pickUp(event);
+  }
+
+  /* * * * * Public Lifecycle Hooks * * * * */
+
+  /**
+   * Angular lifecycle hook for initialization that ensures that the draggable class is applied to the element.
+   */
+  public ngOnInit(): void {
+    if (this.allowDrag) {
+      this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-draggable');
+
+      // update the view
+      this.ngDetectChanges();
+    }
+  }
+
+  /* * * * * Publicly Accessible Draggable Hooks * * * * */
+
+  /**
+   * Resets the state of the element. This will reset all positioning and movement data
+   * but will not modify the current state of any data bound properties.
+   */
+  public reset(): void {
+    this.moving = false;
+    this.oldZIndex = this.oldPosition = '';
+
+    // reset the computed rotation
+    this.computedRotation = 0;
+
+    // make sure the start position offset is reset
+    this.pickUpOffset.x = this.pickUpOffset.y = 0;
+
+    // reset the transform value on the nativeElement
+    this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-ms-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-moz-transform');
+    this.renderer.removeStyle(this.el.nativeElement, '-o-transform');
+    this.renderer.removeStyle(this.el.nativeElement, 'transform');
+
+    // update the view
+    this.ngDetectChanges();
+  }
+
+  /**
+   * Invoked the Angular change detector to ensure that changes to the element's styling are reflected in the view.
+   */
+  private ngDetectChanges(): void {
+    if (this.changeRef && !(this.changeRef as ViewRef).destroyed) {
+      this.changeRef.detectChanges();
+    }
+  }
+
+  /* * * * * Event Handlers * * * * */
+
+  /**
+   * Event handler for when the element is done being dragged as indicated by a mouse release.
+   *
+   * @param event The mouse event for the click release event.
+   */
+  private onMouseUp(event: MouseEvent): void {
+    // stop all default behavior and propagation of the event so it is fully consumed by us
+    event.stopImmediatePropagation();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
+
+    this.putBack();
+  }
+
+  /**
+   * Event handler for when the mouse moves. If the element is currently picked up, then we will apply transformations
+   * to the element to move it.
+   *
+   * @param event The mouse event for the movement from the user's mouse.
+   */
+  private onMouseMove(event: MouseEvent): void {
+    // stop all default behavior and propagation of the event so it is fully consumed by us
+    event.stopImmediatePropagation();
+
+    // prevent the default mouse behavior on images so that browser image dragging is disabled
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+    }
+
+    // define the position of the mouse event
+    const mousePoint: NgxDraggablePoint | null = new NgxDraggablePoint(this.scrollLeft + event.clientX, this.scrollTop + event.clientY);
+
+    if (this.moving && this.allowDrag && this.allowMovementForPosition(mousePoint)) {
+      // perform the move operation
+      this.moveTo(event.clientX - this.pickUpOffset.x, event.clientY - this.pickUpOffset.y);
+    }
   }
 
   /**
@@ -372,7 +392,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // define the position of the touch event
-    let touchPoint: NgxDraggablePoint = new NgxDraggablePoint(
+    const touchPoint: NgxDraggablePoint | null = new NgxDraggablePoint(
       this.scrollLeft + event.changedTouches[0].clientX,
       this.scrollTop + event.changedTouches[0].clientY,
     );
@@ -381,37 +401,9 @@ export class NgxDraggableDomDirective implements OnInit {
     if (this.moving && this.allowDrag && this.allowMovementForPosition(touchPoint)) {
       this.moveTo(event.changedTouches[0].clientX - this.pickUpOffset.x, event.changedTouches[0].clientY - this.pickUpOffset.y);
     }
-
-    // clean up memory
-    touchPoint = null;
   }
 
   /* * * * * Draggable Logic * * * * */
-
-  /**
-   * Resets the state of the element. This will reset all positioning and movement data
-   * but will not modify the current state of any data bound properties.
-   */
-  public reset(): void {
-    this.moving = false;
-    this.oldZIndex = this.oldPosition = '';
-
-    // reset the computed rotation
-    this.computedRotation = 0;
-
-    // make sure the start position offset is reset
-    this.pickUpOffset.x = this.pickUpOffset.y = 0;
-
-    // reset the transform value on the nativeElement
-    this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-ms-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-moz-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-o-transform');
-    this.renderer.removeStyle(this.el.nativeElement, 'transform');
-
-    // update the view
-    this.ngDetectChanges();
-  }
 
   /**
    * Checks to see if a given point, that should represent the user's mouse position, resides within
@@ -428,23 +420,36 @@ export class NgxDraggableDomDirective implements OnInit {
     // generate the bounds dimensional information
     const boundsWidth: number = this.bounds.offsetWidth;
     const boundsHeight: number = this.bounds.offsetHeight;
-    const boundsRotation: number = getRotationForElement(this.bounds);
-    let boundsP0: NgxDraggablePoint = this.boundsCenter;
+    const boundsRotation: number = NgxDraggableDomUtilities.getRotationForElement(this.bounds);
+    const boundsP0: NgxDraggablePoint | null = this.boundsCenter;
+
+    // guard against null responses
+    if (!boundsP0) {
+      return false;
+    }
 
     // generate the top left point position of the rotated bounds so we can understand it's true placement
-    let boundsTL: NgxDraggablePoint = getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
+    let boundsTL: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      boundsP0,
+      boundsWidth,
+      boundsHeight,
+      boundsRotation,
+      ElementHandle.TL,
+    );
+
+    // guard against null responses
+    if (!boundsTL) {
+      return false;
+    }
 
     // we must now rotate the point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
-    boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
+    boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    let checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // calculate if the point is inside of the bounds
-    const isPointInside: boolean = isPointInsideBounds(point, checkBounds);
-
-    // clean up memory
-    boundsP0 = boundsTL = checkBounds = null;
+    const isPointInside: boolean = NgxDraggableMath.isPointInsideBounds(point, checkBounds);
 
     return isPointInside;
   }
@@ -456,29 +461,28 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param y The y position to move the element to.
    */
   private moveTo(x: number, y: number): void {
-    let boundsCheck: NgxDraggableDomBoundsCheckEvent;
-    let matrix: number[];
+    let boundsCheck: NgxDraggableDomBoundsCheckEvent | null | undefined;
     let transform: string;
     let translation: NgxDraggablePoint = new NgxDraggablePoint(0, 0);
+
+    // create the numerical matrix we will use
+    const matrix: number[] = NgxDraggableDomUtilities.getTransformMatrixForElement(this.el.nativeElement);
 
     // factor in the scroll position of the page for the position of the drag
     x += this.scrollLeft;
     y += this.scrollTop;
-
-    // create the numerical matrix we will use
-    matrix = getTransformMatrixForElement(this.el.nativeElement);
 
     // extract translation data from the matrix in the rotated context and add our movement to it
     translation.x = matrix[4];
     translation.y = matrix[5];
 
     // rotate the translation in the opposite direction of the computed parent rotation to normalize
-    translation = rotatePoint(translation, new NgxDraggablePoint(0, 0), -this.computedRotation);
+    translation = NgxDraggableMath.rotatePoint(translation, new NgxDraggablePoint(0, 0), -this.computedRotation);
 
     // calculate the original position at the start of this drag
     const dragPosition: NgxDraggablePoint = new NgxDraggablePoint(
-      this.startPosition.x + translation.x,
-      this.startPosition.y + translation.y,
+      (this.startPosition ? this.startPosition.x : 0) + translation.x,
+      (this.startPosition ? this.startPosition.y : 0) + translation.y,
     );
 
     // calculate the new position
@@ -486,11 +490,11 @@ export class NgxDraggableDomDirective implements OnInit {
     dragPosition.y += y - dragPosition.y;
 
     // update the normalized translation to represent the new transfer
-    translation.x = dragPosition.x - this.startPosition.x;
-    translation.y = dragPosition.y - this.startPosition.y;
+    translation.x = dragPosition.x - (this.startPosition ? this.startPosition.x : 0);
+    translation.y = dragPosition.y - (this.startPosition ? this.startPosition.y : 0);
 
     // return the normalized translation back to the appropriate space
-    translation = rotatePoint(translation, new NgxDraggablePoint(0, 0), -this.computedRotation);
+    translation = NgxDraggableMath.rotatePoint(translation, new NgxDraggablePoint(0, 0), -this.computedRotation);
 
     // if the element is to be constrained by the bounds, we must check the bounds for the element
     if (this.constrainByBounds) {
@@ -542,9 +546,6 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // update the view
     this.ngDetectChanges();
-
-    // clean up memory
-    boundsCheck = matrix = transform = translation = null;
   }
 
   /**
@@ -555,8 +556,8 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   private pickUp(event: MouseEvent | TouchEvent | any): void {
     let matrix: number[];
-    let translation: NgxDraggablePoint = new NgxDraggablePoint(0, 0);
-    let elCenter: NgxDraggablePoint = this.elCenter;
+    const translation: NgxDraggablePoint = new NgxDraggablePoint(0, 0);
+    const elCenter: NgxDraggablePoint | null = this.elCenter;
 
     // set a default position style
     let position = 'relative';
@@ -589,7 +590,7 @@ export class NgxDraggableDomDirective implements OnInit {
 
     // set the position and z-index for when the object is in a dragging state
     this.renderer.setStyle(this.el.nativeElement, 'position', position);
-    this.renderer.setStyle(this.el.nativeElement, 'z-index', String(MAX_SAFE_Z_INDEX));
+    this.renderer.setStyle(this.el.nativeElement, 'z-index', String(NgxDraggableDomDirective.MAX_SAFE_Z_INDEX));
 
     // if we are not moving yet, emit the event to signal moving is beginning and start moving
     if (!this.moving) {
@@ -606,23 +607,28 @@ export class NgxDraggableDomDirective implements OnInit {
       document.addEventListener('touchend', this.fnTouchEnd);
 
       // get the bounds center for rotating
-      let boundsCenter: NgxDraggablePoint = this.boundsCenter;
+      const boundsCenter: NgxDraggablePoint | null = this.boundsCenter;
 
       // set the start position based on the element
       this.startPosition = elCenter;
 
+      // guard against no starting position
+      if (!this.startPosition) {
+        return;
+      }
+
       // compute the current rotation of all parent nodes
-      this.computedRotation = getTotalRotationForElement(this.el.nativeElement.parentElement);
+      this.computedRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
       // normalize the start position for the rotation
-      this.startPosition = rotatePoint(
+      this.startPosition = NgxDraggableMath.rotatePoint(
         this.startPosition,
         (!!boundsCenter) ? boundsCenter : new NgxDraggablePoint(0, 0),
         -this.computedRotation,
       );
 
       // get the current transformation matrix and extract the current translation
-      matrix = getTransformMatrixForElement(this.el.nativeElement);
+      matrix = NgxDraggableDomUtilities.getTransformMatrixForElement(this.el.nativeElement);
       translation.x = matrix[4];
       translation.y = matrix[5];
 
@@ -631,15 +637,15 @@ export class NgxDraggableDomDirective implements OnInit {
       this.startPosition.y -= translation.y;
 
       // reapply the rotation to the start position
-      this.startPosition = rotatePoint(
+      this.startPosition = NgxDraggableMath.rotatePoint(
         this.startPosition,
         (!!boundsCenter) ? boundsCenter : new NgxDraggablePoint(0, 0),
         this.computedRotation,
       );
 
       // calculate the offset position of the mouse compared to the element center
-      this.pickUpOffset.x = this.scrollLeft + event.clientX - elCenter.x;
-      this.pickUpOffset.y = this.scrollTop + event.clientY - elCenter.y;
+      this.pickUpOffset.x = this.scrollLeft + event.clientX - this.startPosition.x;
+      this.pickUpOffset.y = this.scrollTop + event.clientY - this.startPosition.y;
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
@@ -649,16 +655,10 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-dragging');
-
-      // clean up memory from in this scope
-      boundsCenter = null;
     }
 
     // update the view
     this.ngDetectChanges();
-
-    // clean up memory
-    matrix = translation = position = elCenter = null;
   }
 
   /**
@@ -675,14 +675,22 @@ export class NgxDraggableDomDirective implements OnInit {
     // if we are currently moving, then we can successfully put down to signal some movement actually occurred
     if (this.moving) {
       // stop listening for movement
-      document.removeEventListener('mousemove', this.fnMouseMove);
-      document.removeEventListener('touchmove', this.fnTouchMove);
-      document.removeEventListener('mouseup', this.fnMouseUp);
-      document.removeEventListener('touchend', this.fnTouchEnd);
+      if (this.fnMouseMove) {
+        document.removeEventListener('mousemove', this.fnMouseMove);
+      }
+      if (this.fnTouchMove) {
+        document.removeEventListener('touchmove', this.fnTouchMove);
+      }
+      if (this.fnMouseUp) {
+        document.removeEventListener('mouseup', this.fnMouseUp);
+      }
+      if (this.fnTouchEnd) {
+        document.removeEventListener('touchend', this.fnTouchEnd);
+      }
 
       // get the current transformation matrix and extract the current translation
-      let matrix: number[] = getTransformMatrixForElement(this.el.nativeElement);
-      let translation: NgxDraggablePoint = new NgxDraggablePoint(matrix[4], matrix[5]);
+      const matrix: number[] = NgxDraggableDomUtilities.getTransformMatrixForElement(this.el.nativeElement);
+      const translation: NgxDraggablePoint = new NgxDraggablePoint(matrix[4], matrix[5]);
 
       // reset the offset
       this.pickUpOffset.x = this.pickUpOffset.y = 0;
@@ -693,11 +701,11 @@ export class NgxDraggableDomDirective implements OnInit {
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
       if (this.bounds) {
         // get the current center point of the element
-        const elCenter: NgxDraggablePoint = this.elCenter;
+        const elCenter: NgxDraggablePoint | null = this.elCenter;
 
         if (!!elCenter) {
           // check the bounds based on the element position
-          const boundsCheck: NgxDraggableDomBoundsCheckEvent = this.boundsCheck(elCenter);
+          const boundsCheck: NgxDraggableDomBoundsCheckEvent | null = this.boundsCheck(elCenter);
 
           // emit the edge event so consumers know the current state of the position
           if (!!boundsCheck) {
@@ -711,9 +719,6 @@ export class NgxDraggableDomDirective implements OnInit {
 
       // remove the ng-dragging class to the element we're interacting with
       this.renderer.removeClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-dragging');
-
-      // clean up memory
-      matrix = translation = null;
     }
 
     // reset the calculated rotation in case something changes when we're not dragging
@@ -734,48 +739,69 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   private boundsCheck(elP0: NgxDraggablePoint, isSecondaryBoundsCheck?: boolean): NgxDraggableDomBoundsCheckEvent | null {
     // don"t perform the bounds checking if the user has not requested it
-    if (!this.bounds) {
+    if (!this.bounds || !this.startPosition) {
       return null;
     }
 
     // generate the bounds dimensional information
-    let boundsWidth: number = this.bounds.offsetWidth;
-    let boundsHeight: number = this.bounds.offsetHeight;
-    let boundsRotation: number = getRotationForElement(this.bounds);
-    let boundsP0: NgxDraggablePoint = this.boundsCenter;
+    const boundsWidth: number = this.bounds.offsetWidth;
+    const boundsHeight: number = this.bounds.offsetHeight;
+    const boundsRotation: number = NgxDraggableDomUtilities.getRotationForElement(this.bounds);
+    const boundsP0: NgxDraggablePoint | null = this.boundsCenter;
+
+    // guard against null points
+    if (!boundsP0) {
+      return null;
+    }
 
     // generate the top left point position of the rotated bounds so we can understand it's true placement
-    let boundsTL: NgxDraggablePoint = getTransformedCoordinate(boundsP0, boundsWidth, boundsHeight, boundsRotation, ElementHandle.TL);
+    let boundsTL: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      boundsP0,
+      boundsWidth,
+      boundsHeight,
+      boundsRotation,
+      ElementHandle.TL,
+    );
+
+    // guard against null points
+    if (!boundsTL) {
+      return null;
+    }
 
     // we must now rotate the point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
-    boundsTL = rotatePoint(boundsTL, boundsP0, -boundsRotation);
+    boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    let checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // generate the elements dimensional information
-    let elWidth: number = this.elWidth;
-    let elHeight: number = this.elHeight;
-    let elRotation: number = getTotalRotationForElement(this.el.nativeElement);
-    let normalizedElP0: NgxDraggablePoint = rotatePoint(elP0, boundsP0, -boundsRotation);
+    const elWidth: number = this.elWidth;
+    const elHeight: number = this.elHeight;
+    const elRotation: number = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement);
+    const normalizedElP0: NgxDraggablePoint = NgxDraggableMath.rotatePoint(elP0, boundsP0, -boundsRotation);
 
     // generate all four points of the element that we will need to check
-    let elTL: NgxDraggablePoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TL);
-    let elTR: NgxDraggablePoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TR);
-    let elBR: NgxDraggablePoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BR);
-    let elBL: NgxDraggablePoint = getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BL);
+    let elTL: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TL);
+    let elTR: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.TR);
+    let elBR: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BR);
+    let elBL: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(elP0, elWidth, elHeight, elRotation, ElementHandle.BL);
+
+    // guard against invalid points
+    if (!elTL || !elTR || !elBR || !elBL) {
+      return null;
+    }
 
     // we must now rotate each point by the negative direction of the bounds rotation so we can analyze in a 0 degree normalized space
-    elTL = rotatePoint(elTL, boundsP0, -boundsRotation);
-    elTR = rotatePoint(elTR, boundsP0, -boundsRotation);
-    elBR = rotatePoint(elBR, boundsP0, -boundsRotation);
-    elBL = rotatePoint(elBL, boundsP0, -boundsRotation);
+    elTL = NgxDraggableMath.rotatePoint(elTL, boundsP0, -boundsRotation);
+    elTR = NgxDraggableMath.rotatePoint(elTR, boundsP0, -boundsRotation);
+    elBR = NgxDraggableMath.rotatePoint(elBR, boundsP0, -boundsRotation);
+    elBL = NgxDraggableMath.rotatePoint(elBL, boundsP0, -boundsRotation);
 
     // check to see if any of the points reside outside of the bounds
-    let isTLOutside: boolean = !isPointInsideBounds(elTL, checkBounds);
-    let isTROutside: boolean = !isPointInsideBounds(elTR, checkBounds);
-    let isBROutside: boolean = !isPointInsideBounds(elBR, checkBounds);
-    let isBLOutside: boolean = !isPointInsideBounds(elBL, checkBounds);
+    const isTLOutside = !NgxDraggableMath.isPointInsideBounds(elTL, checkBounds);
+    const isTROutside = !NgxDraggableMath.isPointInsideBounds(elTR, checkBounds);
+    const isBROutside = !NgxDraggableMath.isPointInsideBounds(elBR, checkBounds);
+    const isBLOutside = !NgxDraggableMath.isPointInsideBounds(elBL, checkBounds);
 
     // check each boundary line for being crossed
     const isTopEdgeCollided: boolean = isTLOutside && elTL.y <= checkBounds.top ||
@@ -796,10 +822,10 @@ export class NgxDraggableDomDirective implements OnInit {
       isBLOutside && elBL.x <= checkBounds.left;
 
     // define variables to store the displacement of the element to constrain it within the bounds
-    let displaceX: number;
-    let displaceY: number;
+    let displaceX: number | null | undefined;
+    let displaceY: number | null | undefined;
     let greatestConstrainDistance: number;
-    let constrainPoint: NgxDraggablePoint;
+    let constrainPoint: NgxDraggablePoint | null | undefined;
 
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
     if (!!this.constrainByBounds && isTopEdgeCollided || isRightEdgeCollided || isBottomEdgeCollided || isLeftEdgeCollided) {
@@ -811,52 +837,61 @@ export class NgxDraggableDomDirective implements OnInit {
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.x >= (checkBounds.left + checkBounds.width)) {
             constrainPoint = new NgxDraggablePoint(elTL.x, elTL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTL, boundsP0);
           }
           if (isTROutside && elTR.x >= (checkBounds.left + checkBounds.width) &&
-            getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elTR.x, elTR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0);
           }
           if (isBROutside && elBR.x >= (checkBounds.left + checkBounds.width) &&
-            getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBR.x, elBR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0);
           }
           if (isBLOutside && elBL.x >= (checkBounds.left + checkBounds.width) &&
-            getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
-          displaceX = checkBounds.left + checkBounds.width - constrainPoint.x;
+          displaceX = checkBounds.left + checkBounds.width - (constrainPoint ? constrainPoint.x : 0);
         } else if (isLeftEdgeCollided) {
           greatestConstrainDistance = 0;
 
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.x <= checkBounds.left) {
             constrainPoint = new NgxDraggablePoint(elTL.x, elTL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTL, boundsP0);
           }
-          if (isTROutside && elTR.x <= checkBounds.left && getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance) {
+          if (
+            isTROutside && elTR.x <= checkBounds.left &&
+            NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elTR.x, elTR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0);
           }
-          if (isBROutside && elBR.x <= checkBounds.left && getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance) {
+          if (
+            isBROutside && elBR.x <= checkBounds.left &&
+            NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elBR.x, elBR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0);
           }
-          if (isBLOutside && elBL.x <= checkBounds.left && getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance) {
+          if (
+            isBLOutside && elBL.x <= checkBounds.left &&
+            NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
-          displaceX = checkBounds.left - constrainPoint.x;
+          displaceX = checkBounds.left - (constrainPoint ? constrainPoint.x : 0);
         }
       }
 
@@ -868,91 +903,104 @@ export class NgxDraggableDomDirective implements OnInit {
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.y >= (checkBounds.top + checkBounds.height)) {
             constrainPoint = new NgxDraggablePoint(elTL.x, elTL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTL, boundsP0);
           }
           if (isTROutside && elTR.y >= (checkBounds.top + checkBounds.height) &&
-            getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elTR.x, elTR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0);
           }
           if (isBROutside && elBR.y >= (checkBounds.top + checkBounds.height) &&
-            getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBR.x, elBR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0);
           }
           if (isBLOutside && elBL.y >= (checkBounds.top + checkBounds.height) &&
-            getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+            NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
-          displaceY = checkBounds.top + checkBounds.height - constrainPoint.y;
+          displaceY = checkBounds.top + checkBounds.height - (constrainPoint ? constrainPoint.y : 0);
         } else if (isTopEdgeCollided) {
           greatestConstrainDistance = 0;
 
           // determine which collision point we're going to constrain with
           if (isTLOutside && elTL.y <= checkBounds.top) {
             constrainPoint = new NgxDraggablePoint(elTL.x, elTL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTL, boundsP0);
           }
-          if (isTROutside && elTR.y <= checkBounds.top && getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance) {
+          if (
+            isTROutside && elTR.y <= checkBounds.top &&
+            NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elTR.x, elTR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elTR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elTR, boundsP0);
           }
-          if (isBROutside && elBR.y <= checkBounds.top && getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance) {
+          if (
+            isBROutside && elBR.y <= checkBounds.top &&
+            NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elBR.x, elBR.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBR, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBR, boundsP0);
           }
-          if (isBLOutside && elBL.y <= checkBounds.top && getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance) {
+          if (
+            isBLOutside && elBL.y <= checkBounds.top &&
+            NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
+          ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = getDistanceBetweenPoints(elBL, boundsP0);
+            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
-          displaceY = checkBounds.top - constrainPoint.y;
+          displaceY = checkBounds.top - (constrainPoint ? constrainPoint.y : 0);
         }
       }
     }
 
     // calculate the constrained position without rotating back
-    let normalizedConstrainedElP0: NgxDraggablePoint = new NgxDraggablePoint(
-      normalizedElP0.x + ((displaceX !== undefined) ? displaceX : 0),
-      normalizedElP0.y + ((displaceY !== undefined) ? displaceY : 0),
+    const normalizedConstrainedElP0: NgxDraggablePoint | null = new NgxDraggablePoint(
+      normalizedElP0.x + ((displaceX !== undefined && displaceX !== null) ? displaceX : 0),
+      normalizedElP0.y + ((displaceY !== undefined && displaceY !== null) ? displaceY : 0),
     );
 
+    if (!this.boundsCenter) {
+      return null;
+    }
+
     // normalize the start position for translation arithmetic
-    let normalizedStartPosition: NgxDraggablePoint = rotatePoint(
+    const normalizedStartPosition: NgxDraggablePoint | null = NgxDraggableMath.rotatePoint(
       this.startPosition,
       this.boundsCenter,
       -boundsRotation,
     );
 
     // displace the normalized element center
-    const constrainedElP0: NgxDraggablePoint = rotatePoint(
+    const constrainedElP0: NgxDraggablePoint | null = NgxDraggableMath.rotatePoint(
       normalizedConstrainedElP0,
       boundsP0,
       boundsRotation,
     );
 
     // calculate the difference for each direction from the start position
-    const translation: NgxDraggablePoint = new NgxDraggablePoint(
-      normalizedConstrainedElP0.x - normalizedStartPosition.x,
-      normalizedConstrainedElP0.y - normalizedStartPosition.y,
+    const translation: NgxDraggablePoint | null = new NgxDraggablePoint(
+      normalizedConstrainedElP0.x - (normalizedStartPosition ? normalizedStartPosition.x : 0),
+      normalizedConstrainedElP0.y - (normalizedStartPosition ? normalizedStartPosition.y : 0),
     );
 
-    // clean up memory
-    elTL = elTR = elBR = elBL = isTLOutside = isTROutside = isBROutside = isBLOutside = elWidth = elHeight =
-      elRotation = elP0 = checkBounds = boundsWidth = boundsHeight = boundsRotation = boundsP0 =
-      normalizedElP0 = constrainPoint = normalizedConstrainedElP0 = normalizedStartPosition = null;
+    // guard against invalid points
+    if (!constrainedElP0) {
+      return null;
+    }
 
     // if the bounds check will constrain the object, confirm that the constrained position is not colliding in another area
     if ((displaceX !== undefined || displaceY !== undefined) && !isSecondaryBoundsCheck) {
-      const constrainedBoundsCheck: NgxDraggableDomBoundsCheckEvent = this.boundsCheck(constrainedElP0, true);
-      if (constrainedBoundsCheck.isConstrained) {
+      const constrainedBoundsCheck: NgxDraggableDomBoundsCheckEvent | null = this.boundsCheck(constrainedElP0, true);
+      if (constrainedBoundsCheck?.isConstrained) {
         return constrainedBoundsCheck;
       }
     }
