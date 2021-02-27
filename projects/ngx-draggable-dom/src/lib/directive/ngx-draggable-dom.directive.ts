@@ -829,7 +829,7 @@ export class NgxDraggableDomDirective implements OnInit {
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
     if (!!this.constrainByBounds && isTopEdgeCollided || isRightEdgeCollided || isBottomEdgeCollided || isLeftEdgeCollided) {
       // calculate the constraining displacement if the element fits within the width of the bounds
-      if (elWidth < boundsWidth) {
+      if (elWidth <= boundsWidth) {
         if (isRightEdgeCollided) {
           greatestConstrainDistance = 0;
 
@@ -895,7 +895,7 @@ export class NgxDraggableDomDirective implements OnInit {
       }
 
       // calculate the constraining displacement if the element fits within the height of the bounds
-      if (elHeight < boundsHeight) {
+      if (elHeight <= boundsHeight) {
         if (isBottomEdgeCollided) {
           greatestConstrainDistance = 0;
 
