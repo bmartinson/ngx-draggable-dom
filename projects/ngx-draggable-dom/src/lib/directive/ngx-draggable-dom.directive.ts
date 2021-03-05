@@ -616,6 +616,10 @@ export class NgxDraggableDomDirective implements OnInit {
         return;
       }
 
+      // save old start position
+      const prevStartPositionX = this.startPosition.x;
+      const prevStartPositionY = this.startPosition.y;
+
       // compute the current rotation of all parent nodes
       this.computedRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
@@ -630,10 +634,6 @@ export class NgxDraggableDomDirective implements OnInit {
       matrix = NgxDraggableDomUtilities.getTransformMatrixForElement(this.el.nativeElement);
       translation.x = matrix[4];
       translation.y = matrix[5];
-
-      // save old start position
-      const prevStartPositionX = this.startPosition.x;
-      const prevStartPositionY = this.startPosition.y;
 
       // translate it back to the start position
       this.startPosition.x -= translation.x;
