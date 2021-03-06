@@ -616,6 +616,10 @@ export class NgxDraggableDomDirective implements OnInit {
         return;
       }
 
+      // save old start position
+      const prevStartPositionX = this.startPosition.x;
+      const prevStartPositionY = this.startPosition.y;
+
       // compute the current rotation of all parent nodes
       this.computedRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
@@ -643,8 +647,8 @@ export class NgxDraggableDomDirective implements OnInit {
       );
 
       // calculate the offset position of the mouse compared to the element center
-      this.pickUpOffset.x = this.scrollLeft + event.clientX - this.startPosition.x;
-      this.pickUpOffset.y = this.scrollTop + event.clientY - this.startPosition.y;
+      this.pickUpOffset.x = this.scrollLeft + event.clientX - prevStartPositionX;
+      this.pickUpOffset.y = this.scrollTop + event.clientY - prevStartPositionY;
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
