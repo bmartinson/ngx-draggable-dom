@@ -616,6 +616,10 @@ export class NgxDraggableDomDirective implements OnInit {
         return;
       }
 
+      // save old start position
+      const prevStartPositionX = this.startPosition.x;
+      const prevStartPositionY = this.startPosition.y;
+
       // compute the current rotation of all parent nodes
       this.computedRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
