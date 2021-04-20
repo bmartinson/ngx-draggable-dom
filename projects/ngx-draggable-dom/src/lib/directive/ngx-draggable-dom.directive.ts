@@ -646,9 +646,13 @@ export class NgxDraggableDomDirective implements OnInit {
         this.computedRotation,
       );
 
+      // determine the clientX and clientY position based on the event type
+      const clientX: number = (event instanceof MouseEvent) ? event.clientX : (event as TouchEvent).changedTouches[0]?.clientX;
+      const clientY: number = (event instanceof MouseEvent) ? event.clientY : (event as TouchEvent).changedTouches[0]?.clientY;
+
       // calculate the offset position of the mouse compared to the element center
-      this.pickUpOffset.x = this.scrollLeft + event.clientX - prevStartPositionX;
-      this.pickUpOffset.y = this.scrollTop + event.clientY - prevStartPositionY;
+      this.pickUpOffset.x = this.scrollLeft + clientX - this.startPosition.x;
+      this.pickUpOffset.y = this.scrollTop + clientY - this.startPosition.y;
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
@@ -833,7 +837,7 @@ export class NgxDraggableDomDirective implements OnInit {
     // if we are to constrain by the bounds, calculate the displacement of the element to keep it within the bounds
     if (!!this.constrainByBounds && isTopEdgeCollided || isRightEdgeCollided || isBottomEdgeCollided || isLeftEdgeCollided) {
       // calculate the constraining displacement if the element fits within the width of the bounds
-      if (elWidth < boundsWidth) {
+      if (elWidth <= boundsWidth) {
         if (isRightEdgeCollided) {
           greatestConstrainDistance = 0;
 
@@ -899,7 +903,7 @@ export class NgxDraggableDomDirective implements OnInit {
       }
 
       // calculate the constraining displacement if the element fits within the height of the bounds
-      if (elHeight < boundsHeight) {
+      if (elHeight <= boundsHeight) {
         if (isBottomEdgeCollided) {
           greatestConstrainDistance = 0;
 
