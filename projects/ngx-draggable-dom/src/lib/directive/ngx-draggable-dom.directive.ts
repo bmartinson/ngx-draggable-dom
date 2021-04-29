@@ -651,8 +651,8 @@ export class NgxDraggableDomDirective implements OnInit {
       const clientY: number = (event instanceof MouseEvent) ? event.clientY : (event as TouchEvent).changedTouches[0]?.clientY;
 
       // calculate the offset position of the mouse compared to the element center
-      this.pickUpOffset.x = this.scrollLeft + clientX - this.startPosition.x;
-      this.pickUpOffset.y = this.scrollTop + clientY - this.startPosition.y;
+      this.pickUpOffset.x = this.scrollLeft + clientX - prevStartPositionX;
+      this.pickUpOffset.y = this.scrollTop + clientY - prevStartPositionY;
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
