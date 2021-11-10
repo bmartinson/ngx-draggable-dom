@@ -48,46 +48,6 @@ export class NgxDraggableDomDirective implements OnInit {
   private fnTouchEnd: ((event: TouchEvent | any) => void) | undefined;
 
   /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
-   *
-   * @param enabled Whether the draggable behavior should be turned on or off.
-   */
-  @Input()
-  public set ngxDraggableDom(enabled: boolean) {
-    // if no value is provided for the attribute directive name, then turn it on by default
-    if (enabled === undefined || enabled === null) {
-      enabled = true;
-    }
-
-    if (this.allowDrag !== !!enabled) {
-      // update the draggable state
-      this.allowDrag = !!enabled;
-
-      // get the element that will be used to make the element draggable
-      const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
-
-      // if we are allowed to drag, provide the draggable class, otherwise remove it
-      if (this.allowDrag) {
-        this.renderer.addClass(draggableControl, 'ngx-draggable');
-      } else {
-        this.renderer.removeClass(draggableControl, 'ngx-draggable');
-      }
-
-      // update the view
-      this.ngDetectChanges();
-    }
-  }
-
-  /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
-   *
-   * @return True if the element is draggable.
-   */
-  public get ngxDraggableDom(): boolean {
-    return !!this.allowDrag;
-  }
-
-  /**
    * Read only property that returns the width of the element in a normalized 0 degree rotation orientation.
    *
    * @return The true width of the element.
@@ -178,6 +138,46 @@ export class NgxDraggableDomDirective implements OnInit {
       return document.documentElement.scrollTop;
     } else {
       return 0;
+    }
+  }
+
+  /**
+   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   *
+   * @return True if the element is draggable.
+   */
+  public get ngxDraggableDom(): boolean {
+    return !!this.allowDrag;
+  }
+
+  /**
+   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   *
+   * @param enabled Whether the draggable behavior should be turned on or off.
+   */
+  @Input()
+  public set ngxDraggableDom(enabled: boolean) {
+    // if no value is provided for the attribute directive name, then turn it on by default
+    if (enabled === undefined || enabled === null) {
+      enabled = true;
+    }
+
+    if (this.allowDrag !== !!enabled) {
+      // update the draggable state
+      this.allowDrag = !!enabled;
+
+      // get the element that will be used to make the element draggable
+      const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
+
+      // if we are allowed to drag, provide the draggable class, otherwise remove it
+      if (this.allowDrag) {
+        this.renderer.addClass(draggableControl, 'ngx-draggable');
+      } else {
+        this.renderer.removeClass(draggableControl, 'ngx-draggable');
+      }
+
+      // update the view
+      this.ngDetectChanges();
     }
   }
 
