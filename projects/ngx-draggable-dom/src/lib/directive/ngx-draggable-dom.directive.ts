@@ -84,7 +84,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // get the bounding box of the element
-    const elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
+    const elBounds: DOMRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
 
     return new NgxDraggablePoint(
       this.scrollLeft + elBounds.left + (elBounds.width / 2),
@@ -103,7 +103,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // get the bounding box of the element
-    const boundsBounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
+    const boundsBounds: DOMRect = (this.bounds as HTMLElement).getBoundingClientRect();
 
     return new NgxDraggablePoint(
       this.scrollLeft + boundsBounds.left + (boundsBounds.width / 2),
@@ -445,7 +445,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: DOMRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // calculate if the point is inside of the bounds
     const isPointInside: boolean = NgxDraggableMath.isPointInsideBounds(point, checkBounds);
@@ -779,7 +779,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: DOMRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // generate the elements dimensional information
     const elWidth: number = this.elWidth;
