@@ -17,6 +17,25 @@ img {
   align-items: center;
   width: 100%;
 
+  .ngx-dd-handle-container {
+    position: relative;
+
+    .ngx-dd-handle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0.5em;
+      padding: 0.1em;
+      border: 1px dashed #cccccc;
+    }
+  }
+
+  .ngx-dd-group-handle {
+    margin: 0.5em;
+    padding: 0.1em;
+    border: 1px dashed #cccccc;
+  }
+
   .ngx-dd-bounds {
     display: flex;
     justify-content: center;
@@ -40,14 +59,17 @@ img {
     }
   }
 
-  &#ngx-dd-custom-style-example {
+  &#ngx-dd-custom-style-example,
+  &#ngx-dd-handle-example {
 
     // custom override for cursor styling examples
+    &.ngx-draggable,
     .ngx-draggable {
       cursor: grab;
     }
 
     // custom override for cursor styling examples
+    &.ngx-dragging,
     .ngx-dragging {
       cursor: grabbing;
     }

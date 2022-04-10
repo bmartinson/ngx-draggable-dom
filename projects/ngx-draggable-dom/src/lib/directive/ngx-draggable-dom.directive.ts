@@ -27,13 +27,13 @@ export class NgxDraggableDomDirective implements OnInit {
 
   @Input() public bounds: HTMLElement | undefined;
   @Input() public constrainByBounds: boolean;
+  @Input() public handle: HTMLElement | undefined;
+  @Input() public requireMouseOver: boolean;
+  @Input() public requireMouseOverBounds: boolean;
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
-  @Input() private handle: HTMLElement | undefined;
-  @Input() private requireMouseOver: boolean;
-  @Input() private requireMouseOverBounds: boolean;
 
   private allowDrag: boolean;
   private moving: boolean;
