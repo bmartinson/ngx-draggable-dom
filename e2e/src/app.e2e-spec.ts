@@ -10,7 +10,7 @@ describe('workspace-project App', () => {
 
   it('should display welcome message', async () => {
     await page.navigateTo();
-    expect(await page.getTitleText()).toEqual('ngx-draggable-dom-library app is running!');
+    expect(await page.getTitleText()).toEqual('ngx-draggable-dom-sample app is running!');
   });
 
   afterEach(async () => {
