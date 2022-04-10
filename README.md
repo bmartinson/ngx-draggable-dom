@@ -10,7 +10,7 @@ Angular attribute directive that causes any element to become a draggable elemen
 5. [API](#api)
 
 ## About This Package
-This package provides a directive for Angular 7+ that makes any DOM element draggable. This project began as a fork of the [angular2-draggable](https://github.com/xieziyu/angular2-draggable) directive by [xieziyu](https://github.com/xieziyu) and was created to provide a more robust set of features and to keep package releases on the bleeding edge. The initial fork was known as ng2-draggable-dom and was deprecated in favor of this package that runs using the latest Angular dependencies and tools for libraries.
+This package provides a directive for Angular that makes any DOM element draggable. This project began as a fork of the [angular2-draggable](https://github.com/xieziyu/angular2-draggable) directive by [xieziyu](https://github.com/xieziyu) and was created to provide a more robust set of features and to keep package releases on the bleeding edge. The initial fork was known as ng2-draggable-dom and was deprecated in favor of this package that runs using the latest Angular dependencies and tools for libraries.
 
 ## Installation
 ```npm install ngx-draggable-dom --save```
