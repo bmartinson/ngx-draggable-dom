@@ -1,7 +1,11 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "assets": [
-    "src/styles"
+    {
+      "glob": "**/*",
+      "input": "src/lib/styles",
+      "output": "./styles"
+    }
   ],
   "dest": "../../dist/ngx-draggable-dom",
   "lib": {
