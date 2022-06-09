@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build ngx-draggable-dom",
     "build-publish": "ng build ngx-draggable-dom --configuration=production && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
     "test": "ng test",
     "lint": "ng lint",
