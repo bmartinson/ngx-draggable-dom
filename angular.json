@@ -85,23 +85,6 @@
             "browserTarget": "ngx-draggable-dom-sample:build"
           }
         },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "src/test.ts",
-            "polyfills": "src/polyfills.ts",
-            "tsConfig": "tsconfig.spec.json",
-            "karmaConfig": "karma.conf.js",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ],
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": []
-          }
-        },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
@@ -141,14 +124,6 @@
             "production": {
               "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.prod.json"
             }
-          }
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "projects/ngx-draggable-dom/src/test.ts",
-            "tsConfig": "projects/ngx-draggable-dom/tsconfig.spec.json",
-            "karmaConfig": "projects/ngx-draggable-dom/karma.conf.js"
           }
         },
         "lint": {

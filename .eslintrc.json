@@ -50,26 +50,19 @@
           "error",
           {
             "default": [
-              // Index signature
-              // No scope for index signature. See above.
-              // Fields
-              "static-field", // = ["public-static-field", "protected-static-field", "private-static-field"]
-              "instance-field", // = ["public-instance-field", "protected-instance-field", "private-instance-field"]
-              "abstract-field", // = ["public-abstract-field", "protected-abstract-field", "private-abstract-field"]
-              // Getters
-              "static-get", // = ["public-static-get", "protected-static-get", "private-static-get"]
-              "instance-get", // = ["public-instance-get", "protected-instance-get", "private-instance-get"]
-              "abstract-get", // = ["public-abstract-get", "protected-abstract-get", "private-abstract-get"]
-              // Setters
-              "static-set", // = ["public-static-set", "protected-static-set", "private-static-set"]
-              "instance-set", // = ["public-instance-set", "protected-instance-set", "private-instance-set"]
-              "abstract-set", // = ["public-abstract-set", "protected-abstract-set", "private-abstract-set"]
-              // Constructors
-              "constructor", // = ["public-constructor", "protected-constructor", "private-constructor"]
-              // Methods
-              "static-method", // = ["public-static-method", "protected-static-method", "private-static-method"]
-              "instance-method", // = ["public-instance-method", "protected-instance-method", "private-instance-method"]
-              "abstract-method" // = ["public-abstract-method", "protected-abstract-method", "private-abstract-method"]
+              "static-field",
+              "instance-field",
+              "abstract-field",
+              "static-get",
+              "instance-get",
+              "abstract-get",
+              "static-set",
+              "instance-set",
+              "abstract-set",
+              "constructor",
+              "static-method",
+              "instance-method",
+              "abstract-method"
             ]
           }
         ],
@@ -114,7 +107,7 @@
           }
         ],
         "no-multiple-empty-lines": "error",
-        "no-shadow": "off", // this is off so @typescript-eslint/no-shadow can function properly
+        "no-shadow": "off",
         "no-underscore-dangle": "off",
         "object-curly-spacing": [
           "error",
