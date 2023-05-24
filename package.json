@@ -59,7 +59,6 @@
     "eslint-plugin-jsdoc": "44.2.5",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "ng-packagr": "^16.0.1",
-    "protractor": "~7.0.0",
     "ts-node": "~10.9.1",
     "typescript": "^5.0.4"
   }
