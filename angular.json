@@ -75,12 +75,9 @@
           "configurations": {
             "production": {
               "buildTarget": "ngx-draggable-dom-sample:build:production"
-            },
-            "development": {
-              "buildTarget": "ngx-draggable-dom-sample:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "production"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
