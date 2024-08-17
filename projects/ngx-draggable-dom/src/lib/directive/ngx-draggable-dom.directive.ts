@@ -30,6 +30,7 @@ export class NgxDraggableDomDirective implements OnInit {
   @Input() public handle: HTMLElement | undefined;
   @Input() public requireMouseOver: boolean;
   @Input() public requireMouseOverBounds: boolean;
+  @Input() public ignoreMultiTouchEvents: boolean;
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
@@ -191,7 +192,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moved = new EventEmitter<NgxDraggableDomMoveEvent>();
     this.edge = new EventEmitter<NgxDraggableDomBoundsCheckEvent>();
 
-    this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.moving = false;
+    this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.ignoreMultiTouchEvents = this.moving = false;
     this.allowDrag = true;
     this.oldZIndex = this.oldPosition = '';
     this.computedRotation = 0;
@@ -251,6 +252,11 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   @HostListener('touchstart', ['$event'])
   private onTouchStart(event: TouchEvent | any): void {
+    // block multiTouch events if we are configured to do so
+    if (this.ignoreMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+      return;
+    }
+
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -382,6 +388,14 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
   private onTouchMove(event: TouchEvent | any): void {
+    // block multiTouch events if we are configured to do so
+    if (this.ignoreMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+      // ensure any element that is being dragged is put back
+      this.putBack(false);
+
+      return;
+    }
+
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -669,10 +683,10 @@ export class NgxDraggableDomDirective implements OnInit {
   }
 
   /**
-   * Puts the element element down following some movement. This will fire the stopped event to signal that
-   * dragging is complete.
+   * Puts the element down following some movement. This will fire the stopped event to signal that
+   * dragging is complete if we are configured to do so.
    */
-  private putBack(): void {
+  private putBack(fireEvents: boolean = true): void {
     if (this.oldZIndex) {
       this.renderer.setStyle(this.el.nativeElement, 'z-index', this.oldZIndex);
     } else {
@@ -703,7 +717,9 @@ export class NgxDraggableDomDirective implements OnInit {
       this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
       // emit that we have stopped moving
-      this.stopped.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
+      if (fireEvents) {
+        this.stopped.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
+      }
 
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
       if (this.bounds) {
@@ -715,7 +731,7 @@ export class NgxDraggableDomDirective implements OnInit {
           const boundsCheck: NgxDraggableDomBoundsCheckEvent | null = this.boundsCheck(elCenter);
 
           // emit the edge event so consumers know the current state of the position
-          if (!!boundsCheck) {
+          if (!!boundsCheck && fireEvents) {
             this.edge.emit(boundsCheck);
           }
         }
