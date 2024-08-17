@@ -30,6 +30,7 @@ export class NgxDraggableDomDirective implements OnInit {
   @Input() public handle: HTMLElement | undefined;
   @Input() public requireMouseOver: boolean;
   @Input() public requireMouseOverBounds: boolean;
+  @Input() public blockMultiTouchEvents: boolean;
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
@@ -191,7 +192,7 @@ export class NgxDraggableDomDirective implements OnInit {
     this.moved = new EventEmitter<NgxDraggableDomMoveEvent>();
     this.edge = new EventEmitter<NgxDraggableDomBoundsCheckEvent>();
 
-    this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.moving = false;
+    this.constrainByBounds = this.requireMouseOver = this.requireMouseOverBounds = this.blockMultiTouchEvents = this.moving = false;
     this.allowDrag = true;
     this.oldZIndex = this.oldPosition = '';
     this.computedRotation = 0;
@@ -251,6 +252,11 @@ export class NgxDraggableDomDirective implements OnInit {
    */
   @HostListener('touchstart', ['$event'])
   private onTouchStart(event: TouchEvent | any): void {
+    // block multiTouch events if we are configured to do so
+    if (this.blockMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+      return;
+    }
+
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -382,6 +388,14 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
   private onTouchMove(event: TouchEvent | any): void {
+    // block multiTouch events if we are configured to do so
+    if (this.blockMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+      // ensure any element that is being dragged is put back
+      this.putBack();
+
+      return;
+    }
+
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
