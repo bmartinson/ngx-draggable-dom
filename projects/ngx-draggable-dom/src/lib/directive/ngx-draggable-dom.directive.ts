@@ -685,6 +685,8 @@ export class NgxDraggableDomDirective implements OnInit {
   /**
    * Puts the element down following some movement. This will fire the stopped event to signal that
    * dragging is complete if we are configured to do so.
+   *
+   * @param fireEvents When set to true, the operation of putting an element back will fire the movement event.
    */
   private putBack(fireEvents: boolean = true): void {
     if (this.oldZIndex) {
