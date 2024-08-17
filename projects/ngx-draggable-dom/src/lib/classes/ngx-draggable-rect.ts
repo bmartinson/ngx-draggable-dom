@@ -1,4 +1,4 @@
-export class NgxDraggableRect implements ClientRect {
+export class NgxDraggableRect implements DOMRect {
 
   /* * * * * Internal Properties * * * * */
   public x: number;
@@ -50,6 +50,18 @@ export class NgxDraggableRect implements ClientRect {
     } else {
       return this.y + this.height;
     }
+  }
+
+  /**
+   * Receive the draggable rect in json format.
+   */
+  public get toJSON(): any {
+    return {
+      height: this.height,
+      width: this.width,
+      x: this.left,
+      y: this.top,
+    };
   }
 
   public constructor(x: number, y: number, width: number, height: number) {

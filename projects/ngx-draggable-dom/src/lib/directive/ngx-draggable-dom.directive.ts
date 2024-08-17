@@ -27,13 +27,13 @@ export class NgxDraggableDomDirective implements OnInit {
 
   @Input() public bounds: HTMLElement | undefined;
   @Input() public constrainByBounds: boolean;
+  @Input() public handle: HTMLElement | undefined;
+  @Input() public requireMouseOver: boolean;
+  @Input() public requireMouseOverBounds: boolean;
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
-  @Input() private handle: HTMLElement | undefined;
-  @Input() private requireMouseOver: boolean;
-  @Input() private requireMouseOverBounds: boolean;
 
   private allowDrag: boolean;
   private moving: boolean;
@@ -46,46 +46,6 @@ export class NgxDraggableDomDirective implements OnInit {
   private fnTouchMove: ((event: TouchEvent | any) => void) | undefined;
   private fnMouseUp: ((event: MouseEvent) => void) | undefined;
   private fnTouchEnd: ((event: TouchEvent | any) => void) | undefined;
-
-  /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
-   *
-   * @param enabled Whether the draggable behavior should be turned on or off.
-   */
-  @Input()
-  public set ngxDraggableDom(enabled: boolean) {
-    // if no value is provided for the attribute directive name, then turn it on by default
-    if (enabled === undefined || enabled === null) {
-      enabled = true;
-    }
-
-    if (this.allowDrag !== !!enabled) {
-      // update the draggable state
-      this.allowDrag = !!enabled;
-
-      // get the element that will be used to make the element draggable
-      const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
-
-      // if we are allowed to drag, provide the draggable class, otherwise remove it
-      if (this.allowDrag) {
-        this.renderer.addClass(draggableControl, 'ngx-draggable');
-      } else {
-        this.renderer.removeClass(draggableControl, 'ngx-draggable');
-      }
-
-      // update the view
-      this.ngDetectChanges();
-    }
-  }
-
-  /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
-   *
-   * @return True if the element is draggable.
-   */
-  public get ngxDraggableDom(): boolean {
-    return !!this.allowDrag;
-  }
 
   /**
    * Read only property that returns the width of the element in a normalized 0 degree rotation orientation.
@@ -124,7 +84,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // get the bounding box of the element
-    const elBounds: ClientRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
+    const elBounds: DOMRect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
 
     return new NgxDraggablePoint(
       this.scrollLeft + elBounds.left + (elBounds.width / 2),
@@ -143,7 +103,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
 
     // get the bounding box of the element
-    const boundsBounds: ClientRect = (this.bounds as HTMLElement).getBoundingClientRect();
+    const boundsBounds: DOMRect = (this.bounds as HTMLElement).getBoundingClientRect();
 
     return new NgxDraggablePoint(
       this.scrollLeft + boundsBounds.left + (boundsBounds.width / 2),
@@ -178,6 +138,46 @@ export class NgxDraggableDomDirective implements OnInit {
       return document.documentElement.scrollTop;
     } else {
       return 0;
+    }
+  }
+
+  /**
+   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   *
+   * @return True if the element is draggable.
+   */
+  public get ngxDraggableDom(): boolean {
+    return !!this.allowDrag;
+  }
+
+  /**
+   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   *
+   * @param enabled Whether the draggable behavior should be turned on or off.
+   */
+  @Input()
+  public set ngxDraggableDom(enabled: boolean) {
+    // if no value is provided for the attribute directive name, then turn it on by default
+    if (enabled === undefined || enabled === null) {
+      enabled = true;
+    }
+
+    if (this.allowDrag !== !!enabled) {
+      // update the draggable state
+      this.allowDrag = !!enabled;
+
+      // get the element that will be used to make the element draggable
+      const draggableControl: HTMLElement = this.handle ? this.handle : this.el.nativeElement;
+
+      // if we are allowed to drag, provide the draggable class, otherwise remove it
+      if (this.allowDrag) {
+        this.renderer.addClass(draggableControl, 'ngx-draggable');
+      } else {
+        this.renderer.removeClass(draggableControl, 'ngx-draggable');
+      }
+
+      // update the view
+      this.ngDetectChanges();
     }
   }
 
@@ -445,7 +445,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: DOMRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // calculate if the point is inside of the bounds
     const isPointInside: boolean = NgxDraggableMath.isPointInsideBounds(point, checkBounds);
@@ -616,6 +616,10 @@ export class NgxDraggableDomDirective implements OnInit {
         return;
       }
 
+      // save old start position
+      const prevStartPositionX = this.startPosition.x;
+      const prevStartPositionY = this.startPosition.y;
+
       // compute the current rotation of all parent nodes
       this.computedRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.el.nativeElement.parentElement);
 
@@ -647,8 +651,8 @@ export class NgxDraggableDomDirective implements OnInit {
       const clientY: number = (event instanceof MouseEvent) ? event.clientY : (event as TouchEvent).changedTouches[0]?.clientY;
 
       // calculate the offset position of the mouse compared to the element center
-      this.pickUpOffset.x = this.scrollLeft + clientX - this.startPosition.x;
-      this.pickUpOffset.y = this.scrollTop + clientY - this.startPosition.y;
+      this.pickUpOffset.x = this.scrollLeft + clientX - prevStartPositionX;
+      this.pickUpOffset.y = this.scrollTop + clientY - prevStartPositionY;
 
       // fire the event to signal that the element has begun moving
       this.started.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
@@ -775,7 +779,7 @@ export class NgxDraggableDomDirective implements OnInit {
     boundsTL = NgxDraggableMath.rotatePoint(boundsTL, boundsP0, -boundsRotation);
 
     // construct a rectangle that represents the position of the boundary in a normalized space
-    const checkBounds: ClientRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
+    const checkBounds: DOMRect = new NgxDraggableRect(boundsTL.x, boundsTL.y, boundsWidth, boundsHeight);
 
     // generate the elements dimensional information
     const elWidth: number = this.elWidth;

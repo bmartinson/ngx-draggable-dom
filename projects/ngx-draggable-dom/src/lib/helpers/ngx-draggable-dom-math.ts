@@ -31,7 +31,7 @@ export class NgxDraggableMath {
    * @param bounds The boundaries that define where we want to check where the point resides.
    * @return True if the point resides within the bounds.
    */
-  public static isPointInsideBounds(point: NgxDraggablePoint, bounds: ClientRect): boolean {
+  public static isPointInsideBounds(point: NgxDraggablePoint, bounds: DOMRect): boolean {
     return (point.x > bounds.left && point.x < bounds.left + bounds.width &&
       point.y > bounds.top && point.y < bounds.top + bounds.height);
   }
@@ -125,7 +125,7 @@ export class NgxDraggableMath {
    * @param rotation The rotation of the defined rectangle.
    * @return The bounding box rectangle.
    */
-  public static getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rotation: number): ClientRect | null {
+  public static getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rotation: number): DOMRect | null {
     // get the non rotated top left corner of the object
     const pTL: NgxDraggablePoint = new NgxDraggablePoint(p0.x - (w / 2), p0.y - (h / 2));
 

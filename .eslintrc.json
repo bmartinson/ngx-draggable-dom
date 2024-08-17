@@ -46,6 +46,26 @@
             }
           }
         ],
+        "@typescript-eslint/member-ordering": [
+          "error",
+          {
+            "default": [
+              "static-field",
+              "instance-field",
+              "abstract-field",
+              "static-get",
+              "instance-get",
+              "abstract-get",
+              "static-set",
+              "instance-set",
+              "abstract-set",
+              "constructor",
+              "static-method",
+              "instance-method",
+              "abstract-method"
+            ]
+          }
+        ],
         "@typescript-eslint/naming-convention": [
           "error",
           {
@@ -87,7 +107,7 @@
           }
         ],
         "no-multiple-empty-lines": "error",
-        "no-shadow": "off", // this is off so @typescript-eslint/no-shadow can function properly
+        "no-shadow": "off",
         "no-underscore-dangle": "off",
         "object-curly-spacing": [
           "error",
