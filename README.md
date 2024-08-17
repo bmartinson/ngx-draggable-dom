@@ -29,13 +29,13 @@ This package provides a directive for Angular that makes any DOM element draggab
        ...
     })
     export class AppModule { }
-    ```
+	  ```
 
 2. Use the `ngxDraggableDom` directive to make a DOM element draggable.
 
-  ```html
-  <div ngxDraggableDom="true">Drag me!</div>
-  ```
+	```html
+	<div ngxDraggableDom="true">Drag me!</div>
+	```
 
 3. Import `ngx-draggable-dom.scss` to your application's styles or add it to your `angular.json` if you use the CLI tools.
 
@@ -66,6 +66,10 @@ This package provides a directive for Angular that makes any DOM element draggab
 `requireMouseOverBounds` {boolean}
 + `true`: The draggable element will not move when it is constrained by a bounds edge and the mouse position is outside of the bounds.
 + `false`: The draggable element can still move in an unconstrained direction while it is being constrained in another and the mouse position is outside of the bounds.
+
+`ignoreMultiTouchEvents` {boolean}
++ `true`: The object will not move for multi touch gestures, allowing you to support a single touch for movement and multi-touch for other functionality at the same time.
++ `false`: The object will move for any type of touch event that interacts with it, whether a single touch or multi-touch gesture.
 
 ### Output Emitters
 
