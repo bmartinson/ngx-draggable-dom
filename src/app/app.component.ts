@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren, ViewRef } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren } from '@angular/core';
 import { NgxDraggableDomDirective } from '../../projects/ngx-draggable-dom/src/lib/directive/ngx-draggable-dom.directive';
 import { NgxDraggableDomBoundsCheckEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-bounds-check-event';
 import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-move-event';
@@ -30,7 +30,7 @@ export class AppComponent implements AfterViewInit {
    * Event handler that shows the leverage of the directive reset.
    */
   public onResetTranslations(): void {
-    if (!!this.draggableElements) {
+    if (this.draggableElements) {
       this.draggableElements.forEach((el: NgxDraggableDomDirective) => {
         el.reset();
       });
