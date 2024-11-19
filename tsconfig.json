@@ -14,7 +14,6 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": false,
-    "downlevelIteration": true,
     "paths": {
       "ngx-draggable-dom": [
         "dist/ngx-draggable-dom/ngx-draggable-dom",

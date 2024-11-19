@@ -4,10 +4,11 @@ import { NgxDraggableDomBoundsCheckEvent } from '../../projects/ngx-draggable-do
 import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-move-event';
 
 @Component({
-  selector: 'ngx-draggable-dom-lib-app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'ngx-draggable-dom-lib-app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AppComponent implements AfterViewInit {
 

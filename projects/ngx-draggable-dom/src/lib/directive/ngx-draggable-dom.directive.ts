@@ -19,7 +19,8 @@ import { ElementHandle, NgxDraggableMath } from '../helpers/ngx-draggable-dom-ma
 import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities';
 
 @Directive({
-  selector: '[ngxDraggableDom]',
+    selector: '[ngxDraggableDom]',
+    standalone: false
 })
 export class NgxDraggableDomDirective implements OnInit {
 
