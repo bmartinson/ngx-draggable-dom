@@ -3,7 +3,6 @@
  */
 
 export class NgxDraggableDomUtilities {
-
   /**
    * Calculates the computed transform matrix for a given element.
    *
@@ -16,13 +15,14 @@ export class NgxDraggableDomUtilities {
 
     if (window) {
       // get the computed transform style
-      let transform: string = window.getComputedStyle(
-        el,
-        null,
-      ).getPropertyValue('transform');
+      let transform: string = window.getComputedStyle(el, null).getPropertyValue('transform');
 
       // strip non matrix values from the string
-      transform = transform.replace(/matrix/g, '').replace(/\(/g, '').replace(/\)/g, '').replace(/ /g, '');
+      transform = transform
+        .replace(/matrix/g, '')
+        .replace(/\(/g, '')
+        .replace(/\)/g, '')
+        .replace(/ /g, '');
 
       // if we have a transform set, convert the string matrix to a numerical one
       if (transform !== 'none') {
@@ -77,8 +77,8 @@ export class NgxDraggableDomUtilities {
 
     // search up the DOM tree calculating the rotation
     return NgxDraggableDomUtilities.getTotalRotationForElement(
-      node.parentElement, rotation + NgxDraggableDomUtilities.getRotationForElement(node)
+      node.parentElement,
+      rotation + NgxDraggableDomUtilities.getRotationForElement(node)
     );
   }
-
 }

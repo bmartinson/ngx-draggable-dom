@@ -1,18 +1,24 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, QueryList, ViewChildren } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  QueryList,
+  ViewChildren,
+} from '@angular/core';
+
 import { NgxDraggableDomDirective } from '../../projects/ngx-draggable-dom/src/lib/directive/ngx-draggable-dom.directive';
 import { NgxDraggableDomBoundsCheckEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-bounds-check-event';
 import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-move-event';
 
 @Component({
-    selector: 'ngx-draggable-dom-lib-app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    
+  selector: 'ngx-draggable-dom-lib-app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements AfterViewInit {
-
-  @ViewChildren(NgxDraggableDomDirective) private draggableElements !: QueryList<NgxDraggableDomDirective>;
+  @ViewChildren(NgxDraggableDomDirective) private draggableElements!: QueryList<NgxDraggableDomDirective>;
 
   public constructor(private changeRef: ChangeDetectorRef) {
     this.changeRef.detach();
@@ -57,5 +63,4 @@ export class AppComponent implements AfterViewInit {
   public onPrintEdgeEvent(name: string, event: NgxDraggableDomBoundsCheckEvent): void {
     console.log(name, event);
   }
-
 }

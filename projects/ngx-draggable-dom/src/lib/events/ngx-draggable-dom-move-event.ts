@@ -5,7 +5,6 @@ import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
  * the position of the target element.
  */
 export class NgxDraggableDomMoveEvent {
-
   private _target: HTMLElement | undefined;
   private _position: NgxDraggablePoint | undefined;
 
@@ -34,8 +33,7 @@ export class NgxDraggableDomMoveEvent {
    * @param position The position of the target HTMLElement.
    */
   public constructor(target: HTMLElement, position: NgxDraggablePoint) {
-    this._target = (!!target) ? target : undefined;
-    this._position = (!!position) ? position : undefined;
+    this._target = !!target ? target : undefined;
+    this._position = !!position ? position : undefined;
   }
-
 }

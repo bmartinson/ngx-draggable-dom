@@ -5,7 +5,6 @@ import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
  * which edges are intersecting with the boundary defined to constrain the draggable element.
  */
 export class NgxDraggableDomBoundsCheckEvent {
-
   public readonly top: boolean;
   public readonly right: boolean;
   public readonly bottom: boolean;
@@ -41,17 +40,16 @@ export class NgxDraggableDomBoundsCheckEvent {
     left: boolean,
     elP0: NgxDraggablePoint,
     translation: NgxDraggablePoint,
-    isConstrained: boolean,
+    isConstrained: boolean
   ) {
-    this.top = (!!top) ? top : false;
-    this.right = (!!right) ? right : false;
-    this.bottom = (!!bottom) ? bottom : false;
-    this.left = (!!left) ? left : false;
+    this.top = !!top ? top : false;
+    this.right = !!right ? right : false;
+    this.bottom = !!bottom ? bottom : false;
+    this.left = !!left ? left : false;
     if (!!elP0) {
       this.constrainedCenter = elP0;
     }
-    this.translation = (!!translation) ? translation : new NgxDraggablePoint(0, 0);
-    this.isConstrained = (!!isConstrained) ? isConstrained : false;
+    this.translation = !!translation ? translation : new NgxDraggablePoint(0, 0);
+    this.isConstrained = !!isConstrained ? isConstrained : false;
   }
-
 }

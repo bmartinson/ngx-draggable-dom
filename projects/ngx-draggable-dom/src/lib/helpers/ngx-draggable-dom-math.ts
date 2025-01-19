@@ -18,7 +18,6 @@ export enum ElementHandle {
  * Helper functions that are used to help with various mathematical calculations.
  */
 export class NgxDraggableMath {
-
   /**
    * Determines if a given point resides inside of the bounds rectangle that is also provided. This determination is
    * calculated within a zero degree orientation coordinate space, therefore, the bounds rectangle that is provided
@@ -32,8 +31,12 @@ export class NgxDraggableMath {
    * @return True if the point resides within the bounds.
    */
   public static isPointInsideBounds(point: NgxDraggablePoint, bounds: DOMRect): boolean {
-    return (point.x > bounds.left && point.x < bounds.left + bounds.width &&
-      point.y > bounds.top && point.y < bounds.top + bounds.height);
+    return (
+      point.x > bounds.left &&
+      point.x < bounds.left + bounds.width &&
+      point.y > bounds.top &&
+      point.y < bounds.top + bounds.height
+    );
   }
 
   /**
@@ -45,8 +48,10 @@ export class NgxDraggableMath {
    */
   public static rotatePoint(point: NgxDraggablePoint, pivot: NgxDraggablePoint, angle: number): NgxDraggablePoint {
     const radians: number = angle * (Math.PI / 180);
-    const rotatedX: number = Math.cos(radians) * (point.x - pivot.x) - Math.sin(radians) * (point.y - pivot.y) + pivot.x;
-    const rotatedY: number = Math.sin(radians) * (point.x - pivot.x) + Math.cos(radians) * (point.y - pivot.y) + pivot.y;
+    const rotatedX: number =
+      Math.cos(radians) * (point.x - pivot.x) - Math.sin(radians) * (point.y - pivot.y) + pivot.x;
+    const rotatedY: number =
+      Math.sin(radians) * (point.x - pivot.x) + Math.cos(radians) * (point.y - pivot.y) + pivot.y;
 
     return new NgxDraggablePoint(rotatedX, rotatedY);
   }
@@ -58,10 +63,7 @@ export class NgxDraggableMath {
    * @param p1 The second point.
    */
   public static getDistanceBetweenPoints(p0: NgxDraggablePoint, p1: NgxDraggablePoint): number {
-    return Math.sqrt(
-      ((p1.x - p0.x) * (p1.x - p0.x)) +
-      ((p1.y - p0.y) * (p1.y - p0.y))
-    );
+    return Math.sqrt((p1.x - p0.x) * (p1.x - p0.x) + (p1.y - p0.y) * (p1.y - p0.y));
   }
 
   /**
@@ -79,9 +81,9 @@ export class NgxDraggableMath {
     w: number,
     h: number,
     rotation: number,
-    coordinate: ElementHandle = ElementHandle.TL,
+    coordinate: ElementHandle = ElementHandle.TL
   ): NgxDraggablePoint | null {
-    let newP: NgxDraggablePoint = new NgxDraggablePoint(p0.x - (w / 2), p0.y - (h / 2));
+    let newP: NgxDraggablePoint = new NgxDraggablePoint(p0.x - w / 2, p0.y - h / 2);
 
     let p: NgxDraggablePoint;
     if (coordinate === ElementHandle.TL) {
@@ -93,24 +95,24 @@ export class NgxDraggableMath {
     } else if (coordinate === ElementHandle.BR) {
       p = new NgxDraggablePoint(newP.x + w, newP.y + h);
     } else if (coordinate === ElementHandle.L) {
-      p = new NgxDraggablePoint(newP.x, newP.y + (h / 2));
+      p = new NgxDraggablePoint(newP.x, newP.y + h / 2);
     } else if (coordinate === ElementHandle.R) {
-      p = new NgxDraggablePoint(newP.x + w, newP.y + (h / 2));
+      p = new NgxDraggablePoint(newP.x + w, newP.y + h / 2);
     } else if (coordinate === ElementHandle.T) {
-      p = new NgxDraggablePoint(newP.x + (w / 2), newP.y);
+      p = new NgxDraggablePoint(newP.x + w / 2, newP.y);
     } else if (coordinate === ElementHandle.B) {
-      p = new NgxDraggablePoint(newP.x + (w / 2), newP.y + h);
+      p = new NgxDraggablePoint(newP.x + w / 2, newP.y + h);
     } else {
       return null;
     }
 
-    const theta: number = rotation * Math.PI / 180;
+    const theta: number = (rotation * Math.PI) / 180;
 
     // calculate the new coordinate point with rotation applied
-    const p0p: NgxDraggablePoint = new NgxDraggablePoint(newP.x + (w / 2), newP.y + (h / 2));
+    const p0p: NgxDraggablePoint = new NgxDraggablePoint(newP.x + w / 2, newP.y + h / 2);
     newP = new NgxDraggablePoint(
-      ((p.x - p0p.x) * Math.cos(theta)) - ((p.y - p0p.y) * Math.sin(theta)) + p0p.x,
-      ((p.x - p0p.x) * Math.sin(theta)) + ((p.y - p0p.y) * Math.cos(theta)) + p0p.y,
+      (p.x - p0p.x) * Math.cos(theta) - (p.y - p0p.y) * Math.sin(theta) + p0p.x,
+      (p.x - p0p.x) * Math.sin(theta) + (p.y - p0p.y) * Math.cos(theta) + p0p.y
     );
 
     return newP;
@@ -127,21 +129,45 @@ export class NgxDraggableMath {
    */
   public static getBoundingBox(p0: NgxDraggablePoint, w: number, h: number, rotation: number): DOMRect | null {
     // get the non rotated top left corner of the object
-    const pTL: NgxDraggablePoint = new NgxDraggablePoint(p0.x - (w / 2), p0.y - (h / 2));
+    const pTL: NgxDraggablePoint = new NgxDraggablePoint(p0.x - w / 2, p0.y - h / 2);
 
     // get the transformed points around the center point
-    const tl1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(p0, w, h, rotation, ElementHandle.TL);
-    const tr1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(p0, w, h, rotation, ElementHandle.TR);
-    const br1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(p0, w, h, rotation, ElementHandle.BR);
-    const bl1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(p0, w, h, rotation, ElementHandle.BL);
+    const tl1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      p0,
+      w,
+      h,
+      rotation,
+      ElementHandle.TL
+    );
+    const tr1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      p0,
+      w,
+      h,
+      rotation,
+      ElementHandle.TR
+    );
+    const br1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      p0,
+      w,
+      h,
+      rotation,
+      ElementHandle.BR
+    );
+    const bl1: NgxDraggablePoint | null = NgxDraggableMath.getTransformedCoordinate(
+      p0,
+      w,
+      h,
+      rotation,
+      ElementHandle.BL
+    );
 
     if (!tl1 || !tr1 || !br1 || !bl1) {
       return null;
     }
 
     // calculate the horizontal and vertical translation to center the object back
-    const pTransX: number = (tl1.x - pTL.x);
-    const pTransY: number = (tl1.y - pTL.y);
+    const pTransX: number = tl1.x - pTL.x;
+    const pTransY: number = tl1.y - pTL.y;
 
     // calculate the rotated corners by factoring in the translations
     const tl2: NgxDraggablePoint = new NgxDraggablePoint(tl1.x - pTransX, tl1.y - pTransY);
@@ -171,5 +197,4 @@ export class NgxDraggableMath {
 
     return new NgxDraggableRect(bbPTL.x, bbPTL.y, bbPBR.x - bbPTL.x, bbPBR.y - bbPTL.y);
   }
-
 }
