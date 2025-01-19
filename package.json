@@ -8,7 +8,7 @@
     "build-publish": "npm run build-publish-npmjs && npm run build-publish-github",
     "_build-publish": "ng build ngx-draggable-dom --configuration=production && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
     "build-publish-npmjs": "sed -i '' 's/\"name\": \"ngx-draggable-dom\"/\"name\": \"ngx-draggable-dom\"/' projects/ngx-draggable-dom/package.json && npm run _build-publish; git checkout -- ./projects/ngx-draggable-dom/package.json",
-    "build-publish-github": "sed -i '' 's/\"name\": \"ngx-draggable-dom\"/\"name\": \"@bmartinson/ngx-draggable-dom\"/' projects/ngx-draggable-dom/package.json && npm run _build-publish; git checkout --  ./projects/ngx-draggable-dom/package.json",
+    "build-publish-github": "sed -i '' 's/\"name\": \"[^\"]*\"/\"name\": \"@bmartinson\\/ngx-draggable-dom\"/' projects/ngx-draggable-dom/package.json && npm run _build-publish; git checkout -- ./projects/ngx-draggable-dom/package.json",
     "test": "ng test",
     "e2e": "ng e2e",
     "format": "npx prettier --write . $@",
