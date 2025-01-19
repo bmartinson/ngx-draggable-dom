@@ -7,8 +7,9 @@
     "build": "ng build ngx-draggable-dom",
     "build-publish": "ng build ngx-draggable-dom --configuration=production && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
     "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "format": "npx prettier --write . $@",
+    "lint": "ng lint --fix ngx-advanced-img-sample; ng lint --fix ngx-advanced-img"
   },
   "private": false,
   "license": "MIT",
@@ -46,11 +47,13 @@
     "@angular-devkit/build-angular": "^19.1.2",
     "@angular/cli": "^19.1.2",
     "@angular/compiler-cli": "^19.1.1",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.1",
     "@types/node": "^22.10.7",
     "angular-eslint": "19.0.2",
     "eslint": "^9.17.0",
     "eslint-plugin-import": "2.31.0",
     "ng-packagr": "^19.1.0",
+    "prettier": "^3.4.2",
     "ts-node": "~10.9.2",
     "typescript": "^5.6.0",
     "typescript-eslint": "8.20.0"
