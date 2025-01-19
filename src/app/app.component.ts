@@ -8,7 +8,7 @@ import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/l
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    
 })
 export class AppComponent implements AfterViewInit {
 
