@@ -9,7 +9,7 @@
     "_build-publish": "ng build ngx-draggable-dom --configuration=production && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
     "build-publish-npmjs": "sed -i '' 's/\"name\": \"ngx-draggable-dom\"/\"name\": \"ngx-draggable-dom\"/' projects/ngx-draggable-dom/package.json && npm run _build-publish; git checkout -- ./projects/ngx-draggable-dom/package.json",
     "build-publish-github": "sed -i '' 's/\"name\": \"[^\"]*\"/\"name\": \"@bmartinson\\/ngx-draggable-dom\"/' projects/ngx-draggable-dom/package.json && npm run _build-publish; git checkout -- ./projects/ngx-draggable-dom/package.json",
-    "_tag-release": "VERSION=$(jq -r '.version' projects/ngx-advanced-img/package.json) && git tag -a \"$VERSION\" -m \"$VERSION\" && git push --follow --tags",
+    "_tag-release": "VERSION=$(jq -r '.version' projects/ngx-draggable-dom/package.json) && git tag -a \"$VERSION\" -m \"$VERSION\" && git push --follow --tags",
     "test": "ng test",
     "e2e": "ng e2e",
     "format": "npx prettier --write . $@",
