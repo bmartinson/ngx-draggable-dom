@@ -212,7 +212,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param event The mouse event for the click event.
    */
   @HostListener('mousedown', ['$event'])
-  private onMouseDown(event: MouseEvent): void {
+  public onMouseDown(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -236,7 +236,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param event The mouse event for when the mouse leaves the element.
    */
   @HostListener('mouseleave', ['$event'])
-  private onMouseLeave(event: MouseEvent): void {
+  public onMouseLeave(event: MouseEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -257,7 +257,7 @@ export class NgxDraggableDomDirective implements OnInit {
    * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
    */
   @HostListener('touchstart', ['$event'])
-  private onTouchStart(event: TouchEvent | any): void {
+  public onTouchStart(event: TouchEvent | any): void {
     // block multiTouch events if we are configured to do so
     if (this.ignoreMultiTouchEvents && event && event.touches && event.touches.length > 1) {
       return;
