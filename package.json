@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prep-release": "PRJ=$(jq -r .name package.json) ./scripts/bump-package-version.sh \"$PRJ\"",
     "build": "ng build ngx-draggable-dom",
     "build-publish": "npm run build-publish-npmjs && npm run build-publish-github && npm run _tag-release",
     "_build-publish": "ng build ngx-draggable-dom --configuration=production && cd dist/ngx-draggable-dom/ && npm publish && cd ../.. && rm -rf ./dist",
