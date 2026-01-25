@@ -52,15 +52,15 @@
     "@angular-devkit/build-angular": "^21.1.1",
     "@angular/cli": "^21.1.1",
     "@angular/compiler-cli": "^21.1.1",
-    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
-    "@types/node": "^25.0.3",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/node": "^25.0.10",
     "angular-eslint": "21.1.0",
     "eslint": "^9.39.2",
     "eslint-plugin-import": "2.32.0",
-    "ng-packagr": "^21.0.1",
-    "prettier": "^3.7.4",
+    "ng-packagr": "^21.1.0",
+    "prettier": "^3.8.1",
     "ts-node": "~10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.53.1"
   }
 }
