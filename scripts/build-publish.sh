@@ -118,7 +118,7 @@ trap - INT
 echo "${CYAN}Publishing ${PKG_NAME}@${NEW_VERSION} to npmjs...${NC}"
 
 ng build "$PKG_NAME" --configuration=production
-cd "dist/${PKG_NAME}/" && npm publish && cd ../..
+cd "dist/${PKG_NAME}/" && npm publish --tag latest && cd ../..
 rm -rf ./dist
 
 if [ $? -ne 0 ]; then
@@ -140,7 +140,7 @@ echo "${CYAN}Publishing ${SCOPED_NAME}@${NEW_VERSION} to GitHub Packages...${NC}
 sed -i '' "s/\"name\": \"[^\"]*\"/\"name\": \"${SCOPED_NAME//\//\\/}\"/" "$PKG_FILE"
 
 ng build "$PKG_NAME" --configuration=production
-cd "dist/${PKG_NAME}/" && npm publish && cd ../..
+cd "dist/${PKG_NAME}/" && npm publish --tag latest && cd ../..
 rm -rf ./dist
 
 GITHUB_PUBLISH_EXIT=$?
