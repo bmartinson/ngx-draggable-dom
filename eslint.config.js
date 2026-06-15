@@ -2,7 +2,6 @@
 const eslint = require('@eslint/js');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
-const esImport = require('eslint-plugin-import');
 
 module.exports = tseslint.config(
   {
@@ -13,9 +12,6 @@ module.exports = tseslint.config(
       ...tseslint.configs.stylistic,
       ...angular.configs.tsRecommended,
     ],
-    plugins: {
-      import: esImport,
-    },
     processor: angular.processInlineTemplates,
     rules: {
       '@angular-eslint/directive-selector': [
@@ -34,8 +30,7 @@ module.exports = tseslint.config(
           style: 'kebab-case',
         },
       ],
-      'import/order': 'error',
-      'import/no-duplicates': 'error',
+      'no-duplicate-imports': 'error',
     },
   },
   {

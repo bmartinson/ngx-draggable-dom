@@ -118,10 +118,18 @@ trap - INT
 echo "${CYAN}Publishing ${PKG_NAME}@${NEW_VERSION} to npmjs...${NC}"
 
 ng build "$PKG_NAME" --configuration=production
-cd "dist/${PKG_NAME}/" && npm publish --tag latest && cd ../..
+
+if [ $? -ne 0 ] || [ ! -d "dist/${PKG_NAME}" ]; then
+  echo "${RED}${BOLD}Error:${NC} Build failed or dist/${PKG_NAME} not found."
+  cd "$STARTING_DIR"
+  exit 1
+fi
+
+(cd "dist/${PKG_NAME}" && npm publish --tag latest)
+NPMJS_EXIT=$?
 rm -rf ./dist
 
-if [ $? -ne 0 ]; then
+if [ $NPMJS_EXIT -ne 0 ]; then
   echo "${RED}${BOLD}Error:${NC} npmjs publish failed."
   cd "$STARTING_DIR"
   exit 1
@@ -140,10 +148,17 @@ echo "${CYAN}Publishing ${SCOPED_NAME}@${NEW_VERSION} to GitHub Packages...${NC}
 sed -i '' "s/\"name\": \"[^\"]*\"/\"name\": \"${SCOPED_NAME//\//\\/}\"/" "$PKG_FILE"
 
 ng build "$PKG_NAME" --configuration=production
-cd "dist/${PKG_NAME}/" && npm publish --tag latest && cd ../..
-rm -rf ./dist
 
+if [ $? -ne 0 ] || [ ! -d "dist/${PKG_NAME}" ]; then
+  echo "${RED}${BOLD}Error:${NC} Build failed or dist/${PKG_NAME} not found."
+  git checkout -- "$PKG_FILE"
+  cd "$STARTING_DIR"
+  exit 1
+fi
+
+(cd "dist/${PKG_NAME}" && npm publish --tag latest)
 GITHUB_PUBLISH_EXIT=$?
+rm -rf ./dist
 
 # Restore the original package name
 git checkout -- "$PKG_FILE"
