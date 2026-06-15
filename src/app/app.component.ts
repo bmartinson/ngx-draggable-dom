@@ -5,6 +5,7 @@ import {
   Component,
   QueryList,
   ViewChildren,
+  inject,
 } from '@angular/core';
 
 import { NgxDraggableDomDirective } from '../../projects/ngx-draggable-dom/src/lib/directive/ngx-draggable-dom.directive';
@@ -19,8 +20,9 @@ import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/l
 })
 export class AppComponent implements AfterViewInit {
   @ViewChildren(NgxDraggableDomDirective) private draggableElements!: QueryList<NgxDraggableDomDirective>;
+  private changeRef: ChangeDetectorRef = inject(ChangeDetectorRef);
 
-  public constructor(private changeRef: ChangeDetectorRef) {
+  public constructor() {
     this.changeRef.detach();
   }
 
