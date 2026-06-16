@@ -178,11 +178,14 @@ echo ""
 
 echo "${CYAN}Tagging release v${NEW_VERSION}...${NC}"
 
+GITHUB_REPO=$(git remote get-url origin | sed -E 's|.*github\.com[/:]||; s|\.git$||')
 git tag -a "$NEW_VERSION" -m "$NEW_VERSION"
 git push --follow-tags
 
 echo ""
 echo "${GREEN}${BOLD}Release v${NEW_VERSION} complete! ✓${NC}"
 echo ""
+
+open "https://github.com/${GITHUB_REPO}/releases/tag/${NEW_VERSION}"
 
 cd "$STARTING_DIR"
