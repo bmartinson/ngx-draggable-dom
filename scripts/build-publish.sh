@@ -6,6 +6,18 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PKG_NAME="ngx-draggable-dom"
 SCOPED_NAME="@bmartinson/ngx-draggable-dom"
 
+# Portable in-place sed: BSD sed (macOS) requires -i '' while GNU sed (Linux/WSL)
+# treats a separate '' argument as the script itself. Detect and call correctly.
+sed_inplace() {
+  if sed --version >/dev/null 2>&1; then
+    # GNU sed
+    sed -i "$@"
+  else
+    # BSD sed (macOS)
+    sed -i '' "$@"
+  fi
+}
+
 # check if stdout is a terminal...
 if test -t 1; then
   # see if it supports colors...
@@ -145,7 +157,7 @@ echo ""
 echo "${CYAN}Publishing ${SCOPED_NAME}@${NEW_VERSION} to GitHub Packages...${NC}"
 
 # Temporarily rename the package for the GitHub registry
-sed -i '' "s/\"name\": \"[^\"]*\"/\"name\": \"${SCOPED_NAME//\//\\/}\"/" "$PKG_FILE"
+sed_inplace "s/\"name\": \"[^\"]*\"/\"name\": \"${SCOPED_NAME//\//\\/}\"/" "$PKG_FILE"
 
 ng build "$PKG_NAME" --configuration=production
 
