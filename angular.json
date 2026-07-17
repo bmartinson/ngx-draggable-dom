@@ -106,7 +106,7 @@
       "prefix": "ngxDraggableDom",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "builder": "@angular/build:ng-packagr",
           "options": {
             "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.json",
             "project": "projects/ngx-draggable-dom/ng-package.json"
