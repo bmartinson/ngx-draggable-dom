@@ -24,7 +24,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:bmartinson/ngx-draggable-dom.git"
+    "url": "git+ssh://git@github.com/bmartinson/ngx-draggable-dom.git"
   },
   "bugs": {
     "url": "https://github.com/bmartinson/ngx-draggable-dom/issues",
