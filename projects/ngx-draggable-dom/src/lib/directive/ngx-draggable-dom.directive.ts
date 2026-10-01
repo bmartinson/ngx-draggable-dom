@@ -4,12 +4,12 @@ import {
   ElementRef,
   EventEmitter,
   HostListener,
-  Inject,
   Input,
   OnInit,
   Output,
   Renderer2,
   ViewRef,
+  inject,
 } from '@angular/core';
 
 import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
@@ -20,6 +20,7 @@ import { ElementHandle, NgxDraggableMath } from '../helpers/ngx-draggable-dom-ma
 import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities';
 
 @Directive({
+  // eslint-disable-next-line @angular-eslint/directive-selector
   selector: '[ngxDraggableDom]',
   standalone: true,
 })
@@ -36,6 +37,10 @@ export class NgxDraggableDomDirective implements OnInit {
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private edge: EventEmitter<NgxDraggableDomBoundsCheckEvent>;
+
+  private readonly el: ElementRef = inject(ElementRef);
+  private readonly renderer: Renderer2 = inject(Renderer2);
+  private readonly changeRef: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   private allowDrag: boolean;
   private moving: boolean;
@@ -119,9 +124,9 @@ export class NgxDraggableDomDirective implements OnInit {
    * @return The current scroll position of the document in the x direction.
    */
   private get scrollLeft(): number {
-    if (!!window) {
+    if (window) {
       return window.pageXOffset;
-    } else if (!!document && !!document.documentElement) {
+    } else if (document && document.documentElement) {
       return document.documentElement.scrollLeft;
     } else {
       return 0;
@@ -134,9 +139,9 @@ export class NgxDraggableDomDirective implements OnInit {
    * @return The current scroll position of the document in the y direction.
    */
   private get scrollTop(): number {
-    if (!!window) {
+    if (window) {
       return window.pageYOffset;
-    } else if (!!document && !!document.documentElement) {
+    } else if (document && document.documentElement) {
       return document.documentElement.scrollTop;
     } else {
       return 0;
@@ -183,11 +188,7 @@ export class NgxDraggableDomDirective implements OnInit {
     }
   }
 
-  public constructor(
-    @Inject(ElementRef) private el: ElementRef,
-    @Inject(Renderer2) private renderer: Renderer2,
-    @Inject(ChangeDetectorRef) private changeRef: ChangeDetectorRef
-  ) {
+  public constructor() {
     this.started = new EventEmitter<NgxDraggableDomMoveEvent>();
     this.stopped = new EventEmitter<NgxDraggableDomMoveEvent>();
     this.moved = new EventEmitter<NgxDraggableDomMoveEvent>();
@@ -641,7 +642,7 @@ export class NgxDraggableDomDirective implements OnInit {
       // normalize the start position for the rotation
       this.startPosition = NgxDraggableMath.rotatePoint(
         this.startPosition,
-        !!boundsCenter ? boundsCenter : new NgxDraggablePoint(0, 0),
+        boundsCenter ? boundsCenter : new NgxDraggablePoint(0, 0),
         -this.computedRotation
       );
 
@@ -657,7 +658,7 @@ export class NgxDraggableDomDirective implements OnInit {
       // reapply the rotation to the start position
       this.startPosition = NgxDraggableMath.rotatePoint(
         this.startPosition,
-        !!boundsCenter ? boundsCenter : new NgxDraggablePoint(0, 0),
+        boundsCenter ? boundsCenter : new NgxDraggablePoint(0, 0),
         this.computedRotation
       );
 
@@ -691,7 +692,7 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param fireEvents When set to true, the operation of putting an element back will fire the movement event.
    */
-  private putBack(fireEvents: boolean = true): void {
+  private putBack(fireEvents = true): void {
     if (this.oldZIndex) {
       this.renderer.setStyle(this.el.nativeElement, 'z-index', this.oldZIndex);
     } else {
@@ -731,12 +732,12 @@ export class NgxDraggableDomDirective implements OnInit {
         // get the current center point of the element
         const elCenter: NgxDraggablePoint | null = this.elCenter;
 
-        if (!!elCenter) {
+        if (elCenter) {
           // check the bounds based on the element position
           const boundsCheck: NgxDraggableDomBoundsCheckEvent | null = this.boundsCheck(elCenter);
 
           // emit the edge event so consumers know the current state of the position
-          if (!!boundsCheck && fireEvents) {
+          if (boundsCheck && fireEvents) {
             this.edge.emit(boundsCheck);
           }
         }
@@ -925,7 +926,6 @@ export class NgxDraggableDomDirective implements OnInit {
             NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
@@ -960,7 +960,6 @@ export class NgxDraggableDomDirective implements OnInit {
             NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
@@ -1000,7 +999,6 @@ export class NgxDraggableDomDirective implements OnInit {
             NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
@@ -1035,7 +1033,6 @@ export class NgxDraggableDomDirective implements OnInit {
             NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0) > greatestConstrainDistance
           ) {
             constrainPoint = new NgxDraggablePoint(elBL.x, elBL.y);
-            greatestConstrainDistance = NgxDraggableMath.getDistanceBetweenPoints(elBL, boundsP0);
           }
 
           // calculate the displacement
