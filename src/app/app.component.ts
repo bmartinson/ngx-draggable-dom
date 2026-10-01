@@ -14,6 +14,8 @@ import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/l
 
 @Component({
   selector: 'ngx-draggable-dom-lib-app-root',
+  standalone: true,
+  imports: [NgxDraggableDomDirective],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

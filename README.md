@@ -18,32 +18,30 @@ This package provides a directive for Angular that makes any DOM element draggab
 
 `npm install ngx-draggable-dom --save`
 
+Requires Angular 14 or newer.
+
 ## Usage
 
-1. Import `NgxDraggableDomModule` in your app module (or other Angular module) and place it in your imports section:
+Import the standalone `NgxDraggableDomDirective` directly into the component that uses it:
 
-   ```typescript
-   import { NgxDraggableDomModule } from "ngx-draggable-dom";
+```typescript
+import { Component } from '@angular/core';
+import { NgxDraggableDomDirective } from 'ngx-draggable-dom';
 
-   @NgModule({
-      imports: [
-        ...,
-        NgxDraggableDomModule,
-      ],
-      ...
-   })
-   export class AppModule { }
-   ```
+@Component({
+  selector: 'app-example',
+  standalone: true,
+  imports: [NgxDraggableDomDirective],
+  template: '<div [ngxDraggableDom]="true">Drag me!</div>',
+})
+export class ExampleComponent {}
+```
 
-2. Use the `ngxDraggableDom` directive to make a DOM element draggable.
+`NgxDraggableDomModule` is no longer exported. Replace imports of that module with `NgxDraggableDomDirective` in each component that uses the directive.
 
-   ```html
-   <div ngxDraggableDom="true">Drag me!</div>
-   ```
+For the provided drag cursor styles, optionally import `ngx-draggable-dom/styles/ngx-draggable-dom.scss` in your application's styles or add it to `angular.json`.
 
-3. Import `ngx-draggable-dom.scss` to your application's styles or add it to your `angular.json` if you use the CLI tools.
-
-4. Explore the API of inputs and outputs to help make your element drag just the way you would like, or run the wrapper project to test it out with some pre-designed examples!
+Explore the API of inputs and outputs to customize dragging, or run the sample app to try the examples.
 
 ## API
 

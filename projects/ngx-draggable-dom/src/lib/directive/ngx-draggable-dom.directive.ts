@@ -21,7 +21,7 @@ import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities
 
 @Directive({
   selector: '[ngxDraggableDom]',
-  standalone: false,
+  standalone: true,
 })
 export class NgxDraggableDomDirective implements OnInit {
   private static MAX_SAFE_Z_INDEX = 16777271;
