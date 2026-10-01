@@ -20,6 +20,9 @@
     "email": "brian@brianmartinson.com"
   },
   "homepage": "https://github.com/bmartinson/ngx-draggable-dom#readme",
+  "exports": {
+    "./styles/ngx-draggable-dom.scss": "./styles/ngx-draggable-dom.scss"
+  },
   "peerDependencies": {
     "@angular/core": ">=14.0.0"
   },

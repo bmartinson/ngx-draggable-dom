@@ -25,3 +25,57 @@
   -o-transition: none !important;
   transition: none !important;
 }
+
+:where(.ngx-resize-overlay) .ngx-resize-handle {
+  position: absolute;
+  box-sizing: border-box;
+  width: var(--ngx-resize-handle-size, 12px);
+  height: var(--ngx-resize-handle-size, 12px);
+  padding: 0;
+  border: 1px solid var(--ngx-resize-handle-border, #777);
+  border-radius: 50%;
+  background: var(--ngx-resize-handle-background, #fff);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+  transform: translate(-50%, -50%);
+}
+
+.ngx-resize-handle-tl {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
+}
+.ngx-resize-handle-tm {
+  left: 50%;
+  top: 0;
+  cursor: ns-resize;
+}
+.ngx-resize-handle-tr {
+  left: 100%;
+  top: 0;
+  cursor: nesw-resize;
+}
+.ngx-resize-handle-rm {
+  left: 100%;
+  top: 50%;
+  cursor: ew-resize;
+}
+.ngx-resize-handle-br {
+  left: 100%;
+  top: 100%;
+  cursor: nwse-resize;
+}
+.ngx-resize-handle-bm {
+  left: 50%;
+  top: 100%;
+  cursor: ns-resize;
+}
+.ngx-resize-handle-bl {
+  left: 0;
+  top: 100%;
+  cursor: nesw-resize;
+}
+.ngx-resize-handle-lm {
+  left: 0;
+  top: 50%;
+  cursor: ew-resize;
+}
