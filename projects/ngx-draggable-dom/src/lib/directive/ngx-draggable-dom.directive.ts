@@ -50,9 +50,9 @@ export class NgxDraggableDomDirective implements OnInit {
   private oldZIndex: string;
   private oldPosition: string;
   private fnMouseMove: ((event: MouseEvent) => void) | undefined;
-  private fnTouchMove: ((event: TouchEvent | any) => void) | undefined;
+  private fnTouchMove: ((event: TouchEvent) => void) | undefined;
   private fnMouseUp: ((event: MouseEvent) => void) | undefined;
-  private fnTouchEnd: ((event: TouchEvent | any) => void) | undefined;
+  private fnTouchEnd: ((event: TouchEvent) => void) | undefined;
 
   /**
    * Read only property that returns the width of the element in a normalized 0 degree rotation orientation.
@@ -255,12 +255,12 @@ export class NgxDraggableDomDirective implements OnInit {
   /**
    * Event handler for when the element starts moving via a touch event.
    *
-   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   * @param event The touch event for starting a drag.
    */
   @HostListener('touchstart', ['$event'])
-  public onTouchStart(event: TouchEvent | any): void {
+  public onTouchStart(event: TouchEvent): void {
     // block multiTouch events if we are configured to do so
-    if (this.ignoreMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+    if (this.ignoreMultiTouchEvents && event.touches.length > 1) {
       return;
     }
 
@@ -378,9 +378,9 @@ export class NgxDraggableDomDirective implements OnInit {
   /**
    * Event handler for when the element is done being moved via a touch event.
    *
-   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   * @param event The touch event for ending a drag.
    */
-  private onTouchEnd(event: TouchEvent | any): void {
+  private onTouchEnd(event: TouchEvent): void {
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -395,11 +395,11 @@ export class NgxDraggableDomDirective implements OnInit {
   /**
    * Event handler for when the element is moved via a touch event.
    *
-   * @param event The touch event to handle as a TouchEvent (or any solely for working around issues with Safari).
+   * @param event The touch event for moving a drag.
    */
-  private onTouchMove(event: TouchEvent | any): void {
+  private onTouchMove(event: TouchEvent): void {
     // block multiTouch events if we are configured to do so
-    if (this.ignoreMultiTouchEvents && event && event.touches && event.touches.length > 1) {
+    if (this.ignoreMultiTouchEvents && event.touches.length > 1) {
       // ensure any element that is being dragged is put back
       this.putBack(false);
 
@@ -414,18 +414,20 @@ export class NgxDraggableDomDirective implements OnInit {
       event.preventDefault();
     }
 
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+
     // define the position of the touch event
     const touchPoint: NgxDraggablePoint | null = new NgxDraggablePoint(
-      this.scrollLeft + event.changedTouches[0].clientX,
-      this.scrollTop + event.changedTouches[0].clientY
+      this.scrollLeft + touch.clientX,
+      this.scrollTop + touch.clientY
     );
 
     // perform the move operation if we are moving, allowing dragging, and the event is within the bounds
     if (this.moving && this.allowDrag && this.allowMovementForPosition(touchPoint)) {
-      this.moveTo(
-        event.changedTouches[0].clientX - this.pickUpOffset.x,
-        event.changedTouches[0].clientY - this.pickUpOffset.y
-      );
+      this.moveTo(touch.clientX - this.pickUpOffset.x, touch.clientY - this.pickUpOffset.y);
     }
   }
 
@@ -577,7 +579,12 @@ export class NgxDraggableDomDirective implements OnInit {
    *
    * @param event The pick up event that will either be a mouse event or touch event.
    */
-  private pickUp(event: MouseEvent | TouchEvent | any): void {
+  private pickUp(event: MouseEvent | TouchEvent): void {
+    const pointer = 'changedTouches' in event ? event.changedTouches[0] : event;
+    if (!pointer) {
+      return;
+    }
+
     let matrix: number[];
     const translation: NgxDraggablePoint = new NgxDraggablePoint(0, 0);
     const elCenter: NgxDraggablePoint | null = this.elCenter;
@@ -663,10 +670,8 @@ export class NgxDraggableDomDirective implements OnInit {
       );
 
       // determine the clientX and clientY position based on the event type
-      const clientX: number =
-        event instanceof MouseEvent ? event.clientX : (event as TouchEvent).changedTouches[0]?.clientX;
-      const clientY: number =
-        event instanceof MouseEvent ? event.clientY : (event as TouchEvent).changedTouches[0]?.clientY;
+      const clientX: number = pointer.clientX;
+      const clientY: number = pointer.clientY;
 
       // calculate the offset position of the mouse compared to the element center
       this.pickUpOffset.x = this.scrollLeft + clientX - prevStartPositionX;
