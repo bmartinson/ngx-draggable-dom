@@ -69,6 +69,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
   private contentHeightOffset = 0;
   private overlayUpdate?: number;
 
+  /**
+   * Enables resizing and its handles unless explicitly set to false. Disabling stops an active resize.
+   *
+   * @param value Whether resizing should be enabled.
+   */
   @Input()
   public set ngxDraggableDomResize(value: boolean | null | undefined) {
     const enabled = value !== false;
@@ -82,6 +87,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.syncHandles();
   }
 
+  /**
+   * Selects which of the eight handles are displayed. An empty array leaves wheel resizing available.
+   *
+   * @param value The enabled corner and midpoint anchors.
+   */
   @Input()
   public set resizeHandles(value: readonly NgxResizeAnchor[]) {
     if (!Array.isArray(value) || value.some(anchor => !NgxDraggableDomResizeDirective.anchors.includes(anchor))) {
@@ -95,6 +105,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.syncHandles();
   }
 
+  /**
+   * Sets the minimum layout-box width for handle and wheel resizing.
+   *
+   * @param value The minimum width in CSS pixels; it must be positive and at most maxWidth.
+   */
   @Input()
   public set minWidth(value: number) {
     const minimum = this.validateSize(value, 'minWidth', Number.MIN_VALUE);
@@ -104,6 +119,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.minimumWidth = minimum;
   }
 
+  /**
+   * Sets the minimum layout-box height for handle and wheel resizing.
+   *
+   * @param value The minimum height in CSS pixels; it must be positive and at most maxHeight.
+   */
   @Input()
   public set minHeight(value: number) {
     const minimum = this.validateSize(value, 'minHeight', Number.MIN_VALUE);
@@ -113,26 +133,49 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.minimumHeight = minimum;
   }
 
+  /**
+   * Sets the maximum layout-box width for handle and wheel resizing.
+   *
+   * @param value The finite maximum width in CSS pixels; it must be at least minWidth.
+   */
   @Input()
   public set maxWidth(value: number) {
     this.maximumWidth = this.validateSize(value, 'maxWidth', this.minimumWidth);
   }
 
+  /**
+   * Sets the maximum layout-box height for handle and wheel resizing.
+   *
+   * @param value The finite maximum height in CSS pixels; it must be at least minHeight.
+   */
   @Input()
   public set maxHeight(value: number) {
     this.maximumHeight = this.validateSize(value, 'maxHeight', this.minimumHeight);
   }
 
+  /**
+   * Enables center-pinned resizing with the mouse wheel.
+   *
+   * @param value Whether wheel gestures should resize and consume scrolling.
+   */
   @Input()
   public set wheelResize(value: boolean) {
     this.wheelEnabled = value === true;
   }
 
+  /**
+   * Sets the exponential response to wheel movement.
+   *
+   * @param value A positive, finite wheel zoom factor.
+   */
   @Input()
   public set wheelStep(value: number) {
     this.wheelFactor = this.validateSize(value, 'wheelStep', Number.MIN_VALUE);
   }
 
+  /**
+   * Creates the body-attached handle overlay and observes changes that affect its position.
+   */
   public ngAfterViewInit(): void {
     if (typeof document === 'undefined') {
       return;
@@ -162,6 +205,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.positionOverlay();
   }
 
+  /**
+   * Ends any active resize and removes overlay, observers, and event listeners.
+   */
   public ngOnDestroy(): void {
     this.finishResize();
     this.observer?.disconnect();
@@ -182,6 +228,14 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     }
   }
 
+  /**
+   * Validates a size limit or wheel factor before accepting an input.
+   *
+   * @param value The supplied numeric value.
+   * @param name The input name used in the validation error.
+   * @param minimum The smallest accepted value.
+   * @return The validated value.
+   */
   private validateSize(value: number, name: string, minimum: number): number {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < minimum) {
       throw new RangeError(`${name} must be a finite number of at least ${minimum}`);
@@ -189,6 +243,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     return value;
   }
 
+  /**
+   * Rebuilds the enabled handle buttons and stops an active interaction if the selection changes.
+   */
   private syncHandles(): void {
     if (!this.overlay) {
       return;
@@ -216,6 +273,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.positionOverlay();
   }
 
+  /**
+   * Aligns the body-attached overlay with the element's visible center and cumulative rotation.
+   */
   private readonly positionOverlay = (): void => {
     if (!this.overlay || !this.enabled) {
       return;
@@ -235,6 +295,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     );
   };
 
+  /**
+   * Coalesces drag movements into one overlay update per animation frame.
+   */
   private readonly scheduleOverlayUpdate = (): void => {
     if (this.overlayUpdate !== undefined || !this.enabled) {
       return;
@@ -245,6 +308,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     });
   };
 
+  /**
+   * Resizes around the visible center and consumes enabled wheel gestures, including at size limits.
+   *
+   * @param event The wheel event over the resizable element.
+   */
   private readonly onWheel = (event: WheelEvent): void => {
     if (!this.enabled || !this.wheelEnabled) {
       return;
@@ -286,6 +354,12 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.emit(this.resizeStopped, 'center', 'wheel');
   };
 
+  /**
+   * Captures the selected handle, pointer, dimensions, and rotation at the start of a resize.
+   *
+   * @param event The mouse or touch event on the handle.
+   * @param anchor The handle that initiated resizing.
+   */
   private startResize(event: MouseEvent | TouchEvent, anchor: NgxResizeAnchor): void {
     if (!this.enabled || this.session || ('button' in event && event.button !== 0)) {
       return;
@@ -319,6 +393,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.emit(this.resizeStarted, anchor, this.session.source);
   }
 
+  /**
+   * Updates an active mouse resize from the pointer's viewport coordinates.
+   *
+   * @param event The mouse movement event.
+   */
   private readonly onMouseMove = (event: MouseEvent): void => {
     if (this.session?.source !== 'mouse') {
       return;
@@ -327,8 +406,16 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.resizeFromPointer(event.clientX, event.clientY);
   };
 
+  /**
+   * Stops an active handle resize when the window loses focus.
+   */
   private readonly onBlur = (): void => this.finishResize();
 
+  /**
+   * Ends a mouse resize when a mouse button is released.
+   *
+   * @param event The mouse release event.
+   */
   private readonly onMouseUp = (event: MouseEvent): void => {
     if (this.session?.source === 'mouse') {
       event.preventDefault();
@@ -336,6 +423,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     }
   };
 
+  /**
+   * Updates a touch resize only for the touch that started the interaction.
+   *
+   * @param event The touch movement event.
+   */
   private readonly onTouchMove = (event: TouchEvent): void => {
     if (this.session?.source !== 'touch') {
       return;
@@ -348,6 +440,11 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.resizeFromPointer(touch.clientX, touch.clientY);
   };
 
+  /**
+   * Ends a touch resize when its initiating touch ends or is canceled.
+   *
+   * @param event The touch end or cancel event.
+   */
   private readonly onTouchEnd = (event: TouchEvent): void => {
     if (
       this.session?.source === 'touch' &&
@@ -357,6 +454,12 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     }
   };
 
+  /**
+   * Converts pointer movement into local-axis dimensions while keeping the opposite edge or corner pinned.
+   *
+   * @param x The pointer's current viewport X coordinate.
+   * @param y The pointer's current viewport Y coordinate.
+   */
   private resizeFromPointer(x: number, y: number): void {
     const session = this.session;
     if (!session) {
@@ -406,6 +509,14 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.emit(this.resized, session.anchor, session.source);
   }
 
+  /**
+   * Limits a proposed resize to the draggable directive's bounds, if both directives share a host.
+   * Checks rotated extents around the live bounds center and finds the furthest valid intermediate size.
+   *
+   * @param start The dimensions and center before the proposed resize.
+   * @param end The requested dimensions and center before boundary correction.
+   * @return The requested geometry or the furthest geometry contained within the bounds.
+   */
   private constrainToDragBounds(start: ResizeGeometry, end: ResizeGeometry): ResizeGeometry {
     const bounds = this.draggable?.constrainByBounds ? this.draggable.bounds : undefined;
     if (!bounds) {
@@ -465,6 +576,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     };
   }
 
+  /**
+   * Captures the current CSS translate and box-model offsets before changing the element's size.
+   */
   private captureStyles(): void {
     const computed = window.getComputedStyle(this.element);
     const contentWidth = parseFloat(computed.width);
@@ -482,6 +596,13 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.contentHeightOffset = this.element.offsetHeight - contentHeight;
   }
 
+  /**
+   * Applies layout-box dimensions and adjusts CSS translate to place the visible center.
+   *
+   * @param width The new layout-box width in CSS pixels.
+   * @param height The new layout-box height in CSS pixels.
+   * @param center The desired center in viewport coordinates.
+   */
   private applySize(width: number, height: number, center: NgxDraggablePoint): void {
     this.renderer.setStyle(this.element, 'width', `${Math.max(0, width - this.contentWidthOffset)}px`);
     this.renderer.setStyle(this.element, 'height', `${Math.max(0, height - this.contentHeightOffset)}px`);
@@ -502,11 +623,23 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     this.positionOverlay();
   }
 
+  /**
+   * Finds the center of the element's visible bounding box.
+   *
+   * @return The current center in viewport coordinates.
+   */
   private getCenter(): NgxDraggablePoint {
     const bounds = this.element.getBoundingClientRect();
     return new NgxDraggablePoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
   }
 
+  /**
+   * Emits the current dimensions, center, anchor, and interaction source.
+   *
+   * @param emitter The resize output receiving the event.
+   * @param anchor The active handle, or center for a wheel resize.
+   * @param source The mouse, touch, or wheel interaction source.
+   */
   private emit(
     emitter: EventEmitter<NgxDraggableDomResizeEvent>,
     anchor: NgxResizeAnchor | 'center',
@@ -524,6 +657,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     );
   }
 
+  /**
+   * Releases document listeners and emits the final event for an active handle resize.
+   */
   private finishResize(): void {
     if (!this.session) {
       return;
