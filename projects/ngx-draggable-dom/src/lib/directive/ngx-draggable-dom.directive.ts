@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   ChangeDetectorRef,
   Directive,
   ElementRef,
@@ -24,7 +25,7 @@ import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities
   selector: '[ngxDraggableDom]',
   standalone: true,
 })
-export class NgxDraggableDomDirective implements OnInit {
+export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   private static MAX_SAFE_Z_INDEX = 16777271;
 
   @Input() public bounds: HTMLElement | undefined;
@@ -33,6 +34,14 @@ export class NgxDraggableDomDirective implements OnInit {
   @Input() public requireMouseOver: boolean;
   @Input() public requireMouseOverBounds: boolean;
   @Input() public ignoreMultiTouchEvents: boolean;
+  @Input()
+  public set ngxDraggableDomPositionX(value: number | undefined) {
+    this.initialX = this.validatePosition(value, 'ngxDraggableDomPositionX');
+  }
+  @Input()
+  public set ngxDraggableDomPositionY(value: number | undefined) {
+    this.initialY = this.validatePosition(value, 'ngxDraggableDomPositionY');
+  }
   @Output() private started: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private stopped: EventEmitter<NgxDraggableDomMoveEvent>;
   @Output() private moved: EventEmitter<NgxDraggableDomMoveEvent>;
@@ -41,6 +50,11 @@ export class NgxDraggableDomDirective implements OnInit {
   private readonly el: ElementRef = inject(ElementRef);
   private readonly renderer: Renderer2 = inject(Renderer2);
   private readonly changeRef: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private initialX?: number;
+  private initialY?: number;
+  private baselinePosition?: NgxDraggablePoint;
+  private originalTransform = '';
+  private originalTransformPriority = '';
 
   private allowDrag: boolean;
   private moving: boolean;
@@ -293,6 +307,15 @@ export class NgxDraggableDomDirective implements OnInit {
     }
   }
 
+  public ngAfterViewInit(): void {
+    const element = this.el.nativeElement as HTMLElement;
+    const rect = element.getBoundingClientRect();
+    this.baselinePosition = new NgxDraggablePoint(rect.left + this.scrollLeft, rect.top + this.scrollTop);
+    this.originalTransform = element.style.getPropertyValue('transform');
+    this.originalTransformPriority = element.style.getPropertyPriority('transform');
+    this.applyInitialPosition();
+  }
+
   /* * * * * Publicly Accessible Draggable Hooks * * * * */
 
   /**
@@ -300,7 +323,9 @@ export class NgxDraggableDomDirective implements OnInit {
    * but will not modify the current state of any data bound properties.
    */
   public reset(): void {
-    this.moving = false;
+    if (this.moving) {
+      this.putBack(false);
+    }
     this.oldZIndex = this.oldPosition = '';
 
     // reset the computed rotation
@@ -309,15 +334,57 @@ export class NgxDraggableDomDirective implements OnInit {
     // make sure the start position offset is reset
     this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
-    // reset the transform value on the nativeElement
-    this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-ms-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-moz-transform');
-    this.renderer.removeStyle(this.el.nativeElement, '-o-transform');
-    this.renderer.removeStyle(this.el.nativeElement, 'transform');
+    if (this.baselinePosition && (this.initialX !== undefined || this.initialY !== undefined)) {
+      const element = this.el.nativeElement as HTMLElement;
+      if (this.originalTransform) {
+        element.style.setProperty('transform', this.originalTransform, this.originalTransformPriority);
+      } else {
+        this.renderer.removeStyle(element, 'transform');
+      }
+      this.applyInitialPosition();
+      element.dispatchEvent(new Event('ngx-draggable-dom-position-change'));
+    } else {
+      // Preserve the original reset behavior when no initial coordinates are supplied.
+      this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
+      this.renderer.removeStyle(this.el.nativeElement, '-ms-transform');
+      this.renderer.removeStyle(this.el.nativeElement, '-moz-transform');
+      this.renderer.removeStyle(this.el.nativeElement, '-o-transform');
+      this.renderer.removeStyle(this.el.nativeElement, 'transform');
+    }
 
     // update the view
     this.ngDetectChanges();
+  }
+
+  private validatePosition(value: number | undefined, name: string): number | undefined {
+    if (value !== undefined && (typeof value !== 'number' || !Number.isFinite(value))) {
+      throw new TypeError(`${name} must be a finite number of document CSS pixels`);
+    }
+    return value;
+  }
+
+  private applyInitialPosition(): void {
+    if (!this.baselinePosition || (this.initialX === undefined && this.initialY === undefined)) {
+      return;
+    }
+    const element = this.el.nativeElement as HTMLElement;
+    const rect = element.getBoundingClientRect();
+    const delta = NgxDraggableMath.rotatePoint(
+      new NgxDraggablePoint(
+        (this.initialX ?? this.baselinePosition.x) - (rect.left + this.scrollLeft),
+        (this.initialY ?? this.baselinePosition.y) - (rect.top + this.scrollTop)
+      ),
+      new NgxDraggablePoint(0, 0),
+      -NgxDraggableDomUtilities.getTotalRotationForElement(element.parentElement)
+    );
+    if (delta.x === 0 && delta.y === 0) {
+      return;
+    }
+    const matrix = NgxDraggableDomUtilities.getTransformMatrixForElement(element);
+    matrix[4] += delta.x;
+    matrix[5] += delta.y;
+    this.renderer.setStyle(element, 'transform', `matrix(${matrix.join(',')})`);
+    element.dispatchEvent(new Event('ngx-draggable-dom-position-change'));
   }
 
   /**

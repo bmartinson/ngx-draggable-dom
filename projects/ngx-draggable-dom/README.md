@@ -54,6 +54,15 @@ export class ExampleComponent {}
 - `true`: The element can be dragged.
 - `false`: The element cannot be dragged.
 
+`ngxDraggableDomPositionX`, `ngxDraggableDomPositionY` {number}
+
+- Optional initial **visual bounding-box** left (`X`) and top (`Y`) in document CSS pixels, including page scroll. Set either or both; an omitted axis retains its original rendered coordinate. Zero and negative values are valid; non-finite values are rejected.
+- Coordinates are applied after the first render using a transform, not CSS `left`/`top`, so existing element rotation and layout positioning are preserved. Later binding changes do not reposition the element until `reset()` is called; the latest values become the reset target.
+
+  ```html
+  <img [ngxDraggableDom]="true" [ngxDraggableDomPositionX]="200" [ngxDraggableDomPositionY]="300" />
+  ```
+
 `handle` {HTMLElement}
 
 - The element that should be used as the selectable region to drag.
@@ -130,8 +139,7 @@ export class ExampleComponent {}
 
 `reset()` {void}
 
-- Call this function on a reference to the directive in TypeScript code to request that the directive be reset to a default state. This is useful for when the draggable element has its location programmatically adjusted such that subsequent drags should not remember past translations that may affect future placement.
-
+- Ends an active drag and resets its translation. With position inputs, returns the element to the latest document-space X/Y targets; omitted axes return to their original rendered coordinates. The element retains its current size after resizing and keeps its original rotation. Without position inputs, the existing transform-clearing reset behavior applies. The resize directive has no separate `reset()` method.
 
 ## API: Resizing
 
@@ -180,6 +188,11 @@ export class ResizableComponent {
 - The enabled handles; defaults to all eight: `tl` (top left), `tm` (top middle), `tr` (top right), `rm` (right middle), `br` (bottom right), `bm` (bottom middle), `bl` (bottom left), `lm` (left middle). An empty array hides all handles without disabling wheel resizing. Invalid names are rejected.
 - Corners change width and height; midpoints change one dimension. The opposite corner or edge stays fixed, including when the element or its ancestors are rotated.
 
+`constrainAspectRatio` {boolean}
+
+- `true` (default): Corner handles preserve the element's width-to-height ratio as it was when the drag began. The opposite corner stays fixed and both dimensions respect their minimum and maximum limits. If those limits cannot accommodate the ratio, dragging leaves the size unchanged.
+- `false`: Corner handles resize width and height independently. Midpoint handles always resize only their own axis; wheel resizing remains proportional regardless of this input.
+
 `minWidth`, `minHeight` {number}
 
 - Minimum rendered width and height in pixels (default: `20` each). Values must be positive, finite numbers and cannot exceed their respective maximum.
@@ -190,8 +203,8 @@ export class ResizableComponent {
 
 `wheelResize` {boolean}
 
-- `true`: Scrolling the wheel over the element resizes both dimensions proportionally, keeping its center fixed.
-- `false` (default): Wheel events do not resize the element.
+- `true`: Scrolling the wheel over the element resizes both dimensions proportionally, keeping its center fixed. Wheel events are consumed even at a size limit or during a handle drag, so the page does not scroll.
+- `false` (default): Wheel events do not resize the element; normal page scrolling is unaffected.
 
 `wheelStep` {number}
 

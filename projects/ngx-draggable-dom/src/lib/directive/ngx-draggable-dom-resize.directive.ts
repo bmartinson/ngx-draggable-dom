@@ -37,6 +37,8 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
   @Output() public readonly resized = new EventEmitter<NgxDraggableDomResizeEvent>();
   @Output() public readonly resizeStopped = new EventEmitter<NgxDraggableDomResizeEvent>();
 
+  @Input() public constrainAspectRatio = true;
+
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly renderer = inject(Renderer2);
   private overlay?: HTMLElement;
@@ -147,6 +149,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     document.addEventListener('touchmove', this.scheduleOverlayUpdate);
     window.addEventListener('resize', this.positionOverlay);
     window.addEventListener('blur', this.onBlur);
+    this.element.addEventListener('ngx-draggable-dom-position-change', this.positionOverlay);
     this.element.addEventListener('wheel', this.onWheel, { passive: false });
     this.positionOverlay();
   }
@@ -163,6 +166,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       document.removeEventListener('touchmove', this.scheduleOverlayUpdate);
       window.removeEventListener('resize', this.positionOverlay);
       window.removeEventListener('blur', this.onBlur);
+      this.element.removeEventListener('ngx-draggable-dom-position-change', this.positionOverlay);
       this.element.removeEventListener('wheel', this.onWheel);
     }
     if (this.overlay) {
@@ -234,7 +238,12 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
   };
 
   private readonly onWheel = (event: WheelEvent): void => {
-    if (!this.enabled || !this.wheelEnabled || this.session) {
+    if (!this.enabled || !this.wheelEnabled) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.session) {
       return;
     }
     const width = this.element.offsetWidth;
@@ -254,7 +263,6 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     if (!Number.isFinite(scale) || Math.abs(scale - 1) < 0.000001) {
       return;
     }
-    event.preventDefault();
     const center = this.getCenter();
     this.captureStyles();
     this.emit(this.resizeStarted, 'center', 'wheel');
@@ -346,12 +354,26 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       new NgxDraggablePoint(0, 0),
       -session.rotation
     );
-    const width = horizontal
+    let width = horizontal
       ? Math.max(this.minimumWidth, Math.min(this.maximumWidth, session.width + horizontal * delta.x))
       : session.width;
-    const height = vertical
+    let height = vertical
       ? Math.max(this.minimumHeight, Math.min(this.maximumHeight, session.height + vertical * delta.y))
       : session.height;
+    if (horizontal && vertical && this.constrainAspectRatio && session.width > 0 && session.height > 0) {
+      const minimumScale = Math.max(this.minimumWidth / session.width, this.minimumHeight / session.height);
+      const maximumScale = Math.min(this.maximumWidth / session.width, this.maximumHeight / session.height);
+      if (minimumScale > maximumScale) {
+        return;
+      }
+      const projectedScale =
+        1 +
+        (horizontal * delta.x * session.width + vertical * delta.y * session.height) /
+          (session.width * session.width + session.height * session.height);
+      const scale = Math.max(minimumScale, Math.min(maximumScale, projectedScale));
+      width = session.width * scale;
+      height = session.height * scale;
+    }
     const displacement = NgxDraggableMath.rotatePoint(
       new NgxDraggablePoint((horizontal * (width - session.width)) / 2, (vertical * (height - session.height)) / 2),
       new NgxDraggablePoint(0, 0),

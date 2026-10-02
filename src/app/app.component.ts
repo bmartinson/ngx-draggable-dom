@@ -8,14 +8,16 @@ import {
   inject,
 } from '@angular/core';
 
+import { NgxDraggableDomResizeDirective } from '../../projects/ngx-draggable-dom/src/lib/directive/ngx-draggable-dom-resize.directive';
 import { NgxDraggableDomDirective } from '../../projects/ngx-draggable-dom/src/lib/directive/ngx-draggable-dom.directive';
 import { NgxDraggableDomBoundsCheckEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-bounds-check-event';
 import { NgxDraggableDomMoveEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-move-event';
+import { NgxDraggableDomResizeEvent } from '../../projects/ngx-draggable-dom/src/lib/events/ngx-draggable-dom-resize-event';
 
 @Component({
   selector: 'ngx-draggable-dom-lib-app-root',
   standalone: true,
-  imports: [NgxDraggableDomDirective],
+  imports: [NgxDraggableDomDirective, NgxDraggableDomResizeDirective],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,6 +67,10 @@ export class AppComponent implements AfterViewInit {
    * @param event The event to print data for.
    */
   public onPrintEdgeEvent(name: string, event: NgxDraggableDomBoundsCheckEvent): void {
+    console.log(name, event);
+  }
+
+  public onPrintResizeEvent(name: string, event: NgxDraggableDomResizeEvent): void {
     console.log(name, event);
   }
 }
