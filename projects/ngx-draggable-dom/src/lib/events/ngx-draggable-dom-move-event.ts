@@ -7,6 +7,7 @@ import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
 export class NgxDraggableDomMoveEvent {
   private _target: HTMLElement | undefined;
   private _position: NgxDraggablePoint | undefined;
+  private _dropTarget: Element | null;
 
   /**
    * Read only property that indicates what element is being moved.
@@ -27,13 +28,22 @@ export class NgxDraggableDomMoveEvent {
   }
 
   /**
+   * The element beneath the release pointer; only populated for stopped events.
+   */
+  public get dropTarget(): Element | null {
+    return this._dropTarget;
+  }
+
+  /**
    * Constructs the move event with specified property values.
    *
    * @param target The target HTMLElement that was moved.
    * @param position The position of the target HTMLElement.
+   * @param dropTarget The element beneath the dragged element at the release pointer.
    */
-  public constructor(target: HTMLElement, position: NgxDraggablePoint) {
-    this._target = !!target ? target : undefined;
-    this._position = !!position ? position : undefined;
+  public constructor(target: HTMLElement, position: NgxDraggablePoint, dropTarget: Element | null = null) {
+    this._target = target || undefined;
+    this._position = position || undefined;
+    this._dropTarget = dropTarget;
   }
 }

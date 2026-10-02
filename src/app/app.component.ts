@@ -57,7 +57,7 @@ export class AppComponent implements AfterViewInit {
    * @param event The event to print data for.
    */
   public onPrintMoveEvent(name: string, event: NgxDraggableDomMoveEvent): void {
-    console.log(name, event.position);
+    console.log(name, event.position, name === 'stopped' ? event.dropTarget : null);
   }
 
   /**

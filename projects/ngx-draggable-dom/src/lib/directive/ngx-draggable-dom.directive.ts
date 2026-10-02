@@ -67,6 +67,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   private fnTouchMove: ((event: TouchEvent) => void) | undefined;
   private fnMouseUp: ((event: MouseEvent) => void) | undefined;
   private fnTouchEnd: ((event: TouchEvent) => void) | undefined;
+  private activePointer: 'mouse' | 'touch' | null = null;
+  private activeTouchId: number | null = null;
+  private lastPointer: { x: number; y: number } | null = null;
 
   /**
    * Read only property that returns the width of the element in a normalized 0 degree rotation orientation.
@@ -261,7 +264,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     }
 
     // if the user is required to keep the mouse over the element, put it back
-    if (this.requireMouseOver) {
+    if (this.requireMouseOver && this.activePointer === 'mouse') {
       this.putBack();
     }
   }
@@ -404,6 +407,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * @param event The mouse event for the click release event.
    */
   private onMouseUp(event: MouseEvent): void {
+    if (this.activePointer !== 'mouse') {
+      return;
+    }
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -412,7 +418,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       event.preventDefault();
     }
 
-    this.putBack();
+    this.putBack(true, { x: event.clientX, y: event.clientY });
   }
 
   /**
@@ -422,6 +428,10 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * @param event The mouse event for the movement from the user's mouse.
    */
   private onMouseMove(event: MouseEvent): void {
+    if (this.activePointer !== 'mouse') {
+      return;
+    }
+    this.lastPointer = { x: event.clientX, y: event.clientY };
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -448,6 +458,13 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * @param event The touch event for ending a drag.
    */
   private onTouchEnd(event: TouchEvent): void {
+    if (this.activePointer !== 'touch') {
+      return;
+    }
+    const touch = Array.from(event.changedTouches).find(item => item.identifier === this.activeTouchId);
+    if (!touch) {
+      return;
+    }
     // stop all default behavior and propagation of the event so it is fully consumed by us
     event.stopImmediatePropagation();
 
@@ -456,7 +473,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       event.preventDefault();
     }
 
-    this.putBack();
+    this.putBack(true, { x: touch.clientX, y: touch.clientY });
   }
 
   /**
@@ -465,11 +482,19 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * @param event The touch event for moving a drag.
    */
   private onTouchMove(event: TouchEvent): void {
+    if (this.activePointer !== 'touch') {
+      return;
+    }
     // block multiTouch events if we are configured to do so
     if (this.ignoreMultiTouchEvents && event.touches.length > 1) {
       // ensure any element that is being dragged is put back
       this.putBack(false);
 
+      return;
+    }
+
+    const touch = Array.from(event.changedTouches).find(item => item.identifier === this.activeTouchId);
+    if (!touch) {
       return;
     }
 
@@ -481,10 +506,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       event.preventDefault();
     }
 
-    const touch = event.changedTouches[0];
-    if (!touch) {
-      return;
-    }
+    this.lastPointer = { x: touch.clientX, y: touch.clientY };
 
     // define the position of the touch event
     const touchPoint: NgxDraggablePoint | null = new NgxDraggablePoint(
@@ -651,6 +673,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     if (!pointer) {
       return;
     }
+    if (this.moving) {
+      return;
+    }
 
     let matrix: number[];
     const translation: NgxDraggablePoint = new NgxDraggablePoint(0, 0);
@@ -749,6 +774,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
 
       // flag that we are now in a state of movement
       this.moving = true;
+      this.activePointer = 'changedTouches' in event ? 'touch' : 'mouse';
+      this.activeTouchId = 'changedTouches' in event ? event.changedTouches[0].identifier : null;
+      this.lastPointer = { x: pointer.clientX, y: pointer.clientY };
 
       // add the ngx-dragging class to the element we're interacting with
       this.renderer.addClass(this.handle ? this.handle : this.el.nativeElement, 'ngx-dragging');
@@ -764,7 +792,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    *
    * @param fireEvents When set to true, the operation of putting an element back will fire the movement event.
    */
-  private putBack(fireEvents = true): void {
+  private putBack(fireEvents = true, releasePointer = this.lastPointer): void {
     if (this.oldZIndex) {
       this.renderer.setStyle(this.el.nativeElement, 'z-index', this.oldZIndex);
     } else {
@@ -794,9 +822,14 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       // reset the offset
       this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
+      const dropTarget = fireEvents ? this.findDropTarget(releasePointer) : null;
+      this.activePointer = null;
+      this.activeTouchId = null;
+      this.lastPointer = null;
+
       // emit that we have stopped moving
       if (fireEvents) {
-        this.stopped.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation));
+        this.stopped.emit(new NgxDraggableDomMoveEvent(this.el.nativeElement as HTMLElement, translation, dropTarget));
       }
 
       // if the user wants bounds checking, do a check and emit the boundaries if bounds have been hit
@@ -827,6 +860,25 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
 
     // update the view
     this.ngDetectChanges();
+  }
+
+  private findDropTarget(pointer: { x: number; y: number } | null): Element | null {
+    if (!pointer || !Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) {
+      return null;
+    }
+    const dragged = this.el.nativeElement as HTMLElement;
+    for (const element of document.elementsFromPoint(pointer.x, pointer.y)) {
+      if (
+        element !== dragged &&
+        !dragged.contains(element) &&
+        !element.closest('.ngx-resize-overlay') &&
+        element !== document.body &&
+        element !== document.documentElement
+      ) {
+        return element;
+      }
+    }
+    return null;
   }
 
   /**
