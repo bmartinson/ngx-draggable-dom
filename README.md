@@ -5,23 +5,24 @@ Standalone Angular directives for dragging and resizing DOM elements.
 ## Table of contents
 
 1. [About This Package](#about-this-package)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [API: Dragging](#api-dragging)
-5. [API: Resizing](#api-resizing)
-6. [CSS](#css)
+2. [What\'s New!?](#whats-new)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [API: Dragging](#api-dragging)
+6. [API: Resizing](#api-resizing)
+7. [CSS](#css)
 
 ## About This Package
 
 This package provides standalone Angular directives for dragging and resizing DOM elements. This project began as a fork of the [angular2-draggable](https://github.com/xieziyu/angular2-draggable) directive by [xieziyu](https://github.com/xieziyu). The initial fork was known as ng2-draggable-dom and was deprecated in favor of this package.
 
-## What's New!?
+## What's New!? 📜
 
 - ⚠️ `NgxDraggableDomModule` is no longer exported. Replace imports of that module with `NgxDraggableDomDirective` in each component that uses the directive.
-- v22.1 introduces a handful of long-requested enhancements!
-- Resize [#44](https://github.com/bmartinson/ngx-draggable-dom/issues/44)
-- Dropped element capture [#31](https://github.com/bmartinson/ngx-draggable-dom/issues/31)
-- Set x/y positions [#24](https://github.com/bmartinson/ngx-draggable-dom/issues/24)
+- 🔥 v22.1 introduces a handful of long-requested enhancements!
+  - Resize DOM elements with a brand new additional directive, `ngxDraggableDomResize` - [#44](https://github.com/bmartinson/ngx-draggable-dom/issues/44)
+  - Detect the DOM elements that you drop the draggable element on top of - [#31](https://github.com/bmartinson/ngx-draggable-dom/issues/31)
+  - Set initial x/y positions for DOM elements - [#24](https://github.com/bmartinson/ngx-draggable-dom/issues/24)
 
 ## Installation
 
@@ -199,6 +200,7 @@ export class ResizableComponent {
 
 - The enabled handles; defaults to all eight: `tl` (top left), `tm` (top middle), `tr` (top right), `rm` (right middle), `br` (bottom right), `bm` (bottom middle), `bl` (bottom left), `lm` (left middle). An empty array hides all handles without disabling wheel resizing. Invalid names are rejected.
 - Corners change width and height; midpoints change one dimension. The opposite corner or edge stays fixed, including when the element or its ancestors are rotated.
+- When combined with `NgxDraggableDomDirective` on the same element, resizing respects its `bounds` if `constrainByBounds` is `true`. Handle and wheel resizing stop at the bounds, including after dragging has moved the element and when the bounds are rotated. Without constrained drag bounds, resize size limits still apply independently.
 
 `constrainAspectRatio` {boolean}
 

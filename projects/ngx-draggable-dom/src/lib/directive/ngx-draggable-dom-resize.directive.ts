@@ -14,6 +14,13 @@ import { NgxDraggablePoint } from '../classes/ngx-draggable-point';
 import { NgxDraggableDomResizeEvent, NgxResizeAnchor, NgxResizeSource } from '../events/ngx-draggable-dom-resize-event';
 import { NgxDraggableMath } from '../helpers/ngx-draggable-dom-math';
 import { NgxDraggableDomUtilities } from '../helpers/ngx-draggable-dom-utilities';
+import { NgxDraggableDomDirective } from './ngx-draggable-dom.directive';
+
+interface ResizeGeometry {
+  width: number;
+  height: number;
+  center: NgxDraggablePoint;
+}
 
 interface ResizeSession {
   anchor: NgxResizeAnchor;
@@ -41,6 +48,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
 
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly renderer = inject(Renderer2);
+  private readonly draggable = inject(NgxDraggableDomDirective, { optional: true, self: true });
   private overlay?: HTMLElement;
   private observer?: ResizeObserver;
   private session?: ResizeSession;
@@ -264,9 +272,16 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       return;
     }
     const center = this.getCenter();
+    const constrained = this.constrainToDragBounds(
+      { width, height, center },
+      { width: width * scale, height: height * scale, center }
+    );
+    if (constrained.width === width && constrained.height === height) {
+      return;
+    }
     this.captureStyles();
     this.emit(this.resizeStarted, 'center', 'wheel');
-    this.applySize(width * scale, height * scale, center);
+    this.applySize(constrained.width, constrained.height, constrained.center);
     this.emit(this.resized, 'center', 'wheel');
     this.emit(this.resizeStopped, 'center', 'wheel');
   };
@@ -379,12 +394,75 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       new NgxDraggablePoint(0, 0),
       session.rotation
     );
-    this.applySize(
-      width,
-      height,
-      new NgxDraggablePoint(session.center.x + displacement.x, session.center.y + displacement.y)
+    const constrained = this.constrainToDragBounds(
+      { width: session.width, height: session.height, center: session.center },
+      {
+        width,
+        height,
+        center: new NgxDraggablePoint(session.center.x + displacement.x, session.center.y + displacement.y),
+      }
     );
+    this.applySize(constrained.width, constrained.height, constrained.center);
     this.emit(this.resized, session.anchor, session.source);
+  }
+
+  private constrainToDragBounds(start: ResizeGeometry, end: ResizeGeometry): ResizeGeometry {
+    const bounds = this.draggable?.constrainByBounds ? this.draggable.bounds : undefined;
+    if (!bounds) {
+      return end;
+    }
+    const boundsRect = bounds.getBoundingClientRect();
+    const boundsCenter = new NgxDraggablePoint(
+      boundsRect.left + boundsRect.width / 2,
+      boundsRect.top + boundsRect.height / 2
+    );
+    const boundsRotation = NgxDraggableDomUtilities.getTotalRotationForElement(bounds);
+    const elementRotation = NgxDraggableDomUtilities.getTotalRotationForElement(this.element);
+    const relativeAngle = ((elementRotation - boundsRotation) * Math.PI) / 180;
+    const cosine = Math.abs(Math.cos(relativeAngle));
+    const sine = Math.abs(Math.sin(relativeAngle));
+    const inside = (geometry: ResizeGeometry): boolean => {
+      const center = NgxDraggableMath.rotatePoint(geometry.center, boundsCenter, -boundsRotation);
+      const horizontalExtent = (geometry.width * cosine + geometry.height * sine) / 2;
+      const verticalExtent = (geometry.width * sine + geometry.height * cosine) / 2;
+      // Keep the edge inside despite integer offsetWidth rounding and subpixel CSS positioning.
+      return (
+        Math.abs(center.x - boundsCenter.x) + horizontalExtent <= bounds.offsetWidth / 2 - 1 &&
+        Math.abs(center.y - boundsCenter.y) + verticalExtent <= bounds.offsetHeight / 2 - 1
+      );
+    };
+    if (inside(end)) {
+      return end;
+    }
+    if (!inside(start)) {
+      return start;
+    }
+    let low = 0;
+    let high = 1;
+    for (let i = 0; i < 24; i++) {
+      const fraction = (low + high) / 2;
+      const candidate: ResizeGeometry = {
+        width: start.width + (end.width - start.width) * fraction,
+        height: start.height + (end.height - start.height) * fraction,
+        center: new NgxDraggablePoint(
+          start.center.x + (end.center.x - start.center.x) * fraction,
+          start.center.y + (end.center.y - start.center.y) * fraction
+        ),
+      };
+      if (inside(candidate)) {
+        low = fraction;
+      } else {
+        high = fraction;
+      }
+    }
+    return {
+      width: start.width + (end.width - start.width) * low,
+      height: start.height + (end.height - start.height) * low,
+      center: new NgxDraggablePoint(
+        start.center.x + (end.center.x - start.center.x) * low,
+        start.center.y + (end.center.y - start.center.y) * low
+      ),
+    };
   }
 
   private captureStyles(): void {

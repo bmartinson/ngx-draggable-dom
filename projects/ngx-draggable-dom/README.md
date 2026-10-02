@@ -200,6 +200,7 @@ export class ResizableComponent {
 
 - The enabled handles; defaults to all eight: `tl` (top left), `tm` (top middle), `tr` (top right), `rm` (right middle), `br` (bottom right), `bm` (bottom middle), `bl` (bottom left), `lm` (left middle). An empty array hides all handles without disabling wheel resizing. Invalid names are rejected.
 - Corners change width and height; midpoints change one dimension. The opposite corner or edge stays fixed, including when the element or its ancestors are rotated.
+- When combined with `NgxDraggableDomDirective` on the same element, resizing respects its `bounds` if `constrainByBounds` is `true`. Handle and wheel resizing stop at the bounds, including after dragging has moved the element and when the bounds are rotated. Without constrained drag bounds, resize size limits still apply independently.
 
 `constrainAspectRatio` {boolean}
 
