@@ -34,10 +34,21 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   @Input() public requireMouseOver: boolean;
   @Input() public requireMouseOverBounds: boolean;
   @Input() public ignoreMultiTouchEvents: boolean;
+  /**
+   * Sets the initial and reset X coordinate of the element's visual bounding box in document space.
+   *
+   * @param value The document-space left coordinate in CSS pixels, or undefined to retain its original position.
+   */
   @Input()
   public set ngxDraggableDomPositionX(value: number | undefined) {
     this.initialX = this.validatePosition(value, 'ngxDraggableDomPositionX');
   }
+
+  /**
+   * Sets the initial and reset Y coordinate of the element's visual bounding box in document space.
+   *
+   * @param value The document-space top coordinate in CSS pixels, or undefined to retain its original position.
+   */
   @Input()
   public set ngxDraggableDomPositionY(value: number | undefined) {
     this.initialY = this.validatePosition(value, 'ngxDraggableDomPositionY');
@@ -100,7 +111,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   /**
    * Calculates and returns the element's center point based on the element's bounding rectangle.
    *
-   * @return A NgxDraggablePoint that represents the center point of the element.
+   * @return The center in document coordinates, or null when the element is unavailable.
    */
   private get elCenter(): NgxDraggablePoint | null {
     if (!this.el.nativeElement) {
@@ -119,7 +130,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   /**
    * Calculates and returns the bounds' center point based on the bounding element's bounding rectangle.
    *
-   * @return A NgxDraggablePoint that represents the center point of the bounds.
+   * @return The bounds center in document coordinates, or null if no bounds are set.
    */
   private get boundsCenter(): NgxDraggablePoint | null {
     if (!this.bounds) {
@@ -166,7 +177,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   }
 
   /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   * Reports whether the element can be dragged.
    *
    * @return True if the element is draggable.
    */
@@ -175,7 +186,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
   }
 
   /**
-   * Controls the draggable behavior of the element that the NgxDraggableDirective is applied to.
+   * Controls whether the element can be dragged and updates its draggable class.
    *
    * @param enabled Whether the draggable behavior should be turned on or off.
    */
@@ -205,6 +216,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     }
   }
 
+  /**
+   * Initializes the drag events and default movement settings.
+   */
   public constructor() {
     this.started = new EventEmitter<NgxDraggableDomMoveEvent>();
     this.stopped = new EventEmitter<NgxDraggableDomMoveEvent>();
@@ -310,6 +324,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     }
   }
 
+  /**
+   * Captures the element's original document position and transform, then applies any initial coordinates.
+   */
   public ngAfterViewInit(): void {
     const element = this.el.nativeElement as HTMLElement;
     const rect = element.getBoundingClientRect();
@@ -359,6 +376,13 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     this.ngDetectChanges();
   }
 
+  /**
+   * Rejects non-finite position inputs while allowing an axis to remain unset.
+   *
+   * @param value The requested document-space coordinate.
+   * @param name The input name included in a validation error.
+   * @return The finite coordinate or undefined when the axis is unset.
+   */
   private validatePosition(value: number | undefined, name: string): number | undefined {
     if (value !== undefined && (typeof value !== 'number' || !Number.isFinite(value))) {
       throw new TypeError(`${name} must be a finite number of document CSS pixels`);
@@ -366,6 +390,10 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     return value;
   }
 
+  /**
+   * Translates the element to its configured initial coordinates without changing its layout or rotation.
+   * An unspecified axis returns to its originally rendered document position.
+   */
   private applyInitialPosition(): void {
     if (!this.baselinePosition || (this.initialX === undefined && this.initialY === undefined)) {
       return;
@@ -528,6 +556,7 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * to hold the object steady when constrained and the cursor is outside of the bounds.
    *
    * @param point The point to check to see if it is inside of the boundaries
+   * @return Whether movement is allowed at the supplied document-space point.
    */
   private allowMovementForPosition(point: NgxDraggablePoint): boolean {
     if (!this.bounds || !this.constrainByBounds || !this.requireMouseOverBounds) {
@@ -790,7 +819,8 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
    * Puts the element down following some movement. This will fire the stopped event to signal that
    * dragging is complete if we are configured to do so.
    *
-   * @param fireEvents When set to true, the operation of putting an element back will fire the movement event.
+   * @param fireEvents Whether to emit the stopped and edge events.
+   * @param releasePointer The release position in viewport coordinates, or the last known pointer position.
    */
   private putBack(fireEvents = true, releasePointer = this.lastPointer): void {
     if (this.oldZIndex) {
@@ -862,6 +892,12 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     this.ngDetectChanges();
   }
 
+  /**
+   * Finds the deepest element under a release pointer, excluding the dragged host and resize handles.
+   *
+   * @param pointer The pointer's viewport coordinates, or null if no position is available.
+   * @return The underlying element, or null for the page background or a point outside the document.
+   */
   private findDropTarget(pointer: { x: number; y: number } | null): Element | null {
     if (!pointer || !Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) {
       return null;
