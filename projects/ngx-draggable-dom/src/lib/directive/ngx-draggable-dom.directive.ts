@@ -354,15 +354,19 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
     // make sure the start position offset is reset
     this.pickUpOffset.x = this.pickUpOffset.y = 0;
 
+    const element = this.el.nativeElement as HTMLElement;
+
+    // let a resize directive on the same element clear its own translation first, so the initial-position correction
+    // below is measured without it
+    element.dispatchEvent(new Event('ngx-draggable-dom-reset'));
+
     if (this.baselinePosition && (this.initialX !== undefined || this.initialY !== undefined)) {
-      const element = this.el.nativeElement as HTMLElement;
       if (this.originalTransform) {
         element.style.setProperty('transform', this.originalTransform, this.originalTransformPriority);
       } else {
         this.renderer.removeStyle(element, 'transform');
       }
       this.applyInitialPosition();
-      element.dispatchEvent(new Event('ngx-draggable-dom-position-change'));
     } else {
       // Preserve the original reset behavior when no initial coordinates are supplied.
       this.renderer.removeStyle(this.el.nativeElement, '-webkit-transform');
@@ -372,8 +376,8 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       this.renderer.removeStyle(this.el.nativeElement, 'transform');
     }
 
-    // let a resize directive on the same element clear its own translation and realign its handles
-    (this.el.nativeElement as HTMLElement).dispatchEvent(new Event('ngx-draggable-dom-reset'));
+    // realign anything that follows the element's position, such as resize handles
+    element.dispatchEvent(new Event('ngx-draggable-dom-position-change'));
 
     // update the view
     this.ngDetectChanges();
