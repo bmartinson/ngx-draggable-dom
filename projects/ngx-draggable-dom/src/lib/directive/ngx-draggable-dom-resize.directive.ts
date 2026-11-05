@@ -555,23 +555,33 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     const relativeAngle = ((elementRotation - boundsRotation) * Math.PI) / 180;
     const cosine = Math.abs(Math.cos(relativeAngle));
     const sine = Math.abs(Math.sin(relativeAngle));
-    const inside = (geometry: ResizeGeometry): boolean => {
+    // The tolerance absorbs layout snapping (1/64 px in Chromium) so an element resting on the limit can still resize.
+    const tolerance = 0.05;
+    const overflow = (geometry: ResizeGeometry): NgxDraggablePoint => {
       const center = NgxDraggableMath.rotatePoint(geometry.center, boundsCenter, -boundsRotation);
       const horizontalExtent = (geometry.width * cosine + geometry.height * sine) / 2;
       const verticalExtent = (geometry.width * sine + geometry.height * cosine) / 2;
-      // Keep the edge inside despite integer offsetWidth rounding and subpixel CSS positioning. The tolerance
-      // absorbs layout snapping (1/64 px in Chromium) so an element resting on the limit can still resize.
-      const tolerance = 0.05;
-      return (
-        Math.abs(center.x - boundsCenter.x) + horizontalExtent <= bounds.offsetWidth / 2 - 1 + tolerance &&
-        Math.abs(center.y - boundsCenter.y) + verticalExtent <= bounds.offsetHeight / 2 - 1 + tolerance
+      // Keep the edge inside despite integer offsetWidth rounding and subpixel CSS positioning.
+      return new NgxDraggablePoint(
+        Math.abs(center.x - boundsCenter.x) + horizontalExtent - (bounds.offsetWidth / 2 - 1),
+        Math.abs(center.y - boundsCenter.y) + verticalExtent - (bounds.offsetHeight / 2 - 1)
       );
+    };
+    const inside = (geometry: ResizeGeometry): boolean => {
+      const excess = overflow(geometry);
+      return excess.x <= tolerance && excess.y <= tolerance;
     };
     if (inside(end)) {
       return end;
     }
     if (!inside(start)) {
-      return start;
+      // An element that already touches or crosses its bounds (for example one sized flush with them) may still
+      // resize as long as no edge moves further out; otherwise it keeps its current size.
+      const startExcess = overflow(start);
+      const endExcess = overflow(end);
+      return endExcess.x <= Math.max(startExcess.x, tolerance) && endExcess.y <= Math.max(startExcess.y, tolerance)
+        ? end
+        : start;
     }
     let low = 0;
     let high = 1;
