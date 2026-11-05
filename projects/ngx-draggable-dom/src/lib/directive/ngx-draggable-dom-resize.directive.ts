@@ -68,6 +68,8 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
   private contentWidthOffset = 0;
   private contentHeightOffset = 0;
   private overlayUpdate?: number;
+  private originalTranslate = '';
+  private originalTranslatePriority = '';
 
   /**
    * Enables resizing and its handles unless explicitly set to false. Disabling stops an active resize.
@@ -181,6 +183,9 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       return;
     }
 
+    this.originalTranslate = this.element.style.getPropertyValue('translate');
+    this.originalTranslatePriority = this.element.style.getPropertyPriority('translate');
+
     const overlay = this.renderer.createElement('div') as HTMLElement;
     this.renderer.addClass(overlay, 'ngx-resize-overlay');
     this.renderer.setStyle(overlay, 'position', 'fixed');
@@ -201,6 +206,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     window.addEventListener('resize', this.positionOverlay);
     window.addEventListener('blur', this.onBlur);
     this.element.addEventListener('ngx-draggable-dom-position-change', this.positionOverlay);
+    this.element.addEventListener('ngx-draggable-dom-reset', this.onDraggableReset);
     this.element.addEventListener('wheel', this.onWheel, { passive: false });
     this.positionOverlay();
   }
@@ -221,6 +227,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       window.removeEventListener('resize', this.positionOverlay);
       window.removeEventListener('blur', this.onBlur);
       this.element.removeEventListener('ngx-draggable-dom-position-change', this.positionOverlay);
+      this.element.removeEventListener('ngx-draggable-dom-reset', this.onDraggableReset);
       this.element.removeEventListener('wheel', this.onWheel);
     }
     if (this.overlay) {
@@ -296,6 +303,22 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
   };
 
   /**
+   * Restores the element's original CSS translate when a draggable directive on the same element is reset,
+   * so the translation added while resizing is cleared along with the drag translation.
+   */
+  private readonly onDraggableReset = (): void => {
+    this.finishResize();
+    if (this.originalTranslate) {
+      this.element.style.setProperty('translate', this.originalTranslate, this.originalTranslatePriority);
+    } else {
+      this.renderer.removeStyle(this.element, 'translate');
+    }
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.positionOverlay();
+  };
+
+  /**
    * Coalesces drag movements into one overlay update per animation frame.
    */
   private readonly scheduleOverlayUpdate = (): void => {
@@ -322,8 +345,7 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
     if (this.session) {
       return;
     }
-    const width = this.element.offsetWidth;
-    const height = this.element.offsetHeight;
+    const { width, height } = this.getLayoutSize();
     if (width <= 0 || height <= 0 || event.deltaY === 0) {
       return;
     }
@@ -375,14 +397,15 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       return;
     }
     this.captureStyles();
+    const size = this.getLayoutSize();
     this.session = {
       anchor,
       source: touch ? 'touch' : 'mouse',
       touchId: touch?.identifier,
       pointer: new NgxDraggablePoint(pointer.clientX, pointer.clientY),
       center: this.getCenter(),
-      width: this.element.offsetWidth,
-      height: this.element.offsetHeight,
+      width: size.width,
+      height: size.height,
       rotation: NgxDraggableDomUtilities.getTotalRotationForElement(this.element),
     };
     document.addEventListener('mousemove', this.onMouseMove);
@@ -536,10 +559,12 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
       const center = NgxDraggableMath.rotatePoint(geometry.center, boundsCenter, -boundsRotation);
       const horizontalExtent = (geometry.width * cosine + geometry.height * sine) / 2;
       const verticalExtent = (geometry.width * sine + geometry.height * cosine) / 2;
-      // Keep the edge inside despite integer offsetWidth rounding and subpixel CSS positioning.
+      // Keep the edge inside despite integer offsetWidth rounding and subpixel CSS positioning. The tolerance
+      // absorbs layout snapping (1/64 px in Chromium) so an element resting on the limit can still resize.
+      const tolerance = 0.05;
       return (
-        Math.abs(center.x - boundsCenter.x) + horizontalExtent <= bounds.offsetWidth / 2 - 1 &&
-        Math.abs(center.y - boundsCenter.y) + verticalExtent <= bounds.offsetHeight / 2 - 1
+        Math.abs(center.x - boundsCenter.x) + horizontalExtent <= bounds.offsetWidth / 2 - 1 + tolerance &&
+        Math.abs(center.y - boundsCenter.y) + verticalExtent <= bounds.offsetHeight / 2 - 1 + tolerance
       );
     };
     if (inside(end)) {
@@ -581,19 +606,40 @@ export class NgxDraggableDomResizeDirective implements AfterViewInit, OnDestroy 
    */
   private captureStyles(): void {
     const computed = window.getComputedStyle(this.element);
-    const contentWidth = parseFloat(computed.width);
-    const contentHeight = parseFloat(computed.height);
-    if (!Number.isFinite(contentWidth) || !Number.isFinite(contentHeight)) {
-      throw new Error('ngxDraggableDomResize requires an element with measurable CSS width and height');
-    }
+    const size = this.getLayoutSize();
     const translated = computed.translate === 'none' ? ['0px', '0px'] : computed.translate.split(' ');
     this.initialTranslateX = translated[0];
     this.initialTranslateY = translated[1] ?? '0px';
     this.initialTranslateZ = translated[2] ?? '';
     this.offsetX = 0;
     this.offsetY = 0;
-    this.contentWidthOffset = this.element.offsetWidth - contentWidth;
-    this.contentHeightOffset = this.element.offsetHeight - contentHeight;
+    this.contentWidthOffset = size.width - parseFloat(computed.width);
+    this.contentHeightOffset = size.height - parseFloat(computed.height);
+  }
+
+  /**
+   * Measures the element's unrotated layout box (border box) without the whole-pixel rounding of
+   * offsetWidth/offsetHeight, so resizes that end on fractional sizes resume from the exact size.
+   *
+   * @return The layout-box width and height in CSS pixels.
+   */
+  private getLayoutSize(): { width: number; height: number } {
+    const computed = window.getComputedStyle(this.element);
+    const width = parseFloat(computed.width);
+    const height = parseFloat(computed.height);
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+      throw new Error('ngxDraggableDomResize requires an element with measurable CSS width and height');
+    }
+    if (computed.boxSizing === 'border-box') {
+      return { width, height };
+    }
+    const sum = (...values: string[]): number => values.reduce((total, value) => total + (parseFloat(value) || 0), 0);
+    return {
+      width:
+        width + sum(computed.paddingLeft, computed.paddingRight, computed.borderLeftWidth, computed.borderRightWidth),
+      height:
+        height + sum(computed.paddingTop, computed.paddingBottom, computed.borderTopWidth, computed.borderBottomWidth),
+    };
   }
 
   /**

@@ -152,7 +152,7 @@ export class ExampleComponent {
 
 `reset()` {void}
 
-- Ends an active drag without emitting `stopped` and resets its translation. With position inputs, returns the element to the latest document-space X/Y targets; omitted axes return to their original rendered coordinates. The element retains its current size after resizing and keeps its original rotation. Without position inputs, the original transform-clearing reset behavior applies. The resize directive has no separate `reset()` method.
+- Ends an active drag without emitting `stopped` and resets its translation. With position inputs, returns the element to the latest document-space X/Y targets; omitted axes return to their original rendered coordinates. The element retains its current size after resizing and keeps its original rotation. Without position inputs, the original transform-clearing reset behavior applies. When `ngxDraggableDomResize` is on the same element, `reset()` also clears the translation added while resizing (restoring the element's original CSS `translate`), interrupts an active resize, and realigns the handles. The resize directive has no separate `reset()` method.
 
 ## API: Resizing
 

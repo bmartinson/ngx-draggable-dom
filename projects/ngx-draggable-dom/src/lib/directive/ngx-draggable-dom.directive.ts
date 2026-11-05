@@ -372,6 +372,9 @@ export class NgxDraggableDomDirective implements OnInit, AfterViewInit {
       this.renderer.removeStyle(this.el.nativeElement, 'transform');
     }
 
+    // let a resize directive on the same element clear its own translation and realign its handles
+    (this.el.nativeElement as HTMLElement).dispatchEvent(new Event('ngx-draggable-dom-reset'));
+
     // update the view
     this.ngDetectChanges();
   }
