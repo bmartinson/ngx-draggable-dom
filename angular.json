@@ -90,18 +90,28 @@
     "ngx-draggable-dom": {
       "projectType": "library",
       "root": "projects/ngx-draggable-dom",
-      "sourceRoot": "projects/ngx-draggable-dom/src",
+      "sourceRoot": "projects/ngx-draggable-dom",
       "prefix": "ngxDraggableDom",
       "architect": {
         "build": {
-          "builder": "@angular/build:ng-packagr",
+          "builder": "@angular/build:library",
           "options": {
             "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.json",
-            "project": "projects/ngx-draggable-dom/ng-package.json"
+            "outputPath": "dist/ngx-draggable-dom",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/ngx-draggable-dom/src/lib/styles",
+                "output": "./styles"
+              }
+            ]
           },
           "configurations": {
             "production": {
               "tsConfig": "projects/ngx-draggable-dom/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "compilationMode": "full"
             }
           }
         },
